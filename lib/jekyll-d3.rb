@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "d3/version"
+require_relative "jekyll-d3/version"
 
 module Jekyll
   module D3
