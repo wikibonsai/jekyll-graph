@@ -33,4 +33,7 @@ Gem::Specification.new do |spec|
 
   # For more information and examples about making a new gem, checkout our
   # guide at: https://bundler.io/guides/creating_gem.html
+
+  spec.add_runtime_dependency "jekyll-namespaces", "~> 0.0.2"
+  spec.add_runtime_dependency "jekyll-wikilinks", "~> 0.0.6"
 end
