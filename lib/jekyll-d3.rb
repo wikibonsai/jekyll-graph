@@ -46,7 +46,7 @@ module Jekyll
 
         # graph
 
-        # net-web
+        # setup net-web
         if !disabled_net_web?
           @graph_nodes, @graph_links = [], []
           @md_docs.each do |doc|
@@ -54,14 +54,9 @@ module Jekyll
               self.generate_json_net_web(doc)
             end
           end
-          self.write_graph_net_web()
         end
 
-        if !disabled_tree?
-          # @root_doc = @md_docs.detect { |doc| doc.basename == 'root.md' }
-          # @tree = Tree.new(@root_doc, @md_docs)
-          self.write_graph_tree()
-        end
+        self.write_graph_data()
       end
 
       # config helpers
@@ -103,12 +98,13 @@ module Jekyll
         @config[GRAPH_DATA_KEY] && @config[GRAPH_DATA_KEY][TYPE_KEY] && @config[GRAPH_DATA_KEY][TYPE_KEY][type]
       end
 
-      # net-web
+      # helpers
 
       def generate_json_net_web(doc)
         Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
-
+        #
         # missing nodes
+        #
         @site.link_index.index[doc.url].missing.each do |missing_link_name|
           if @graph_nodes.none? { |node| node[:id] == missing_link_name }
             Jekyll.logger.warn "Net-Web node missing: ", missing_link_name
@@ -124,8 +120,9 @@ module Jekyll
             }
           end
         end
-
+        #
         # existing nodes
+        #
         @graph_nodes << {
           # TODO: when using real ids, be sure to convert id to string (to_s)
           id: relative_url(doc.url),
@@ -148,28 +145,6 @@ module Jekyll
           end
         end
       end
-
-      def write_graph_net_web()
-        assets_path = has_custom_assets_path? ? option_graph(WRITE_GRAPH_PATH_KEY) : "/assets"
-        if !File.directory?(File.join(@site.source, assets_path))
-          Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
-        end
-        # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-        # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-        static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
-        # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
-        File.write(@site.source + static_file.relative_path, JSON.dump({
-          links: @graph_links,
-          nodes: @graph_nodes,
-        }))
-        # tests fail without manually adding the static file, but actual site builds seem to do ok
-        # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
-        if @testing
-          @site.static_files << static_file if !@site.static_files.include?(static_file)
-        end
-      end
-
-      # tree
 
       def generate_json_tree(node)
         json_node = {}
@@ -197,18 +172,32 @@ module Jekyll
         return json_node
       end
 
-      def write_graph_tree()
+      def write_graph_data()
         assets_path = has_custom_assets_path? ? option_graph(WRITE_GRAPH_PATH_KEY) : "/assets"
         if !File.directory?(File.join(@site.source, assets_path))
           Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
         end
-        # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-        # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-        static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
-        json_tree = self.generate_json_tree(@site.tree.root)
-        File.write(@site.source + static_file.relative_path, JSON.dump(
-          json_tree
-        ))
+
+        if !disabled_net_web?
+          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
+          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
+          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
+          # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
+          File.write(@site.source + static_file.relative_path, JSON.dump({
+            links: @graph_links,
+            nodes: @graph_nodes,
+          }))
+        end
+        if !disabled_tree?
+          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
+          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
+          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
+          json_tree = self.generate_json_tree(@site.tree.root)
+          File.write(@site.source + static_file.relative_path, JSON.dump(
+            json_tree
+          ))
+        end
+
         # tests fail without manually adding the static file, but actual site builds seem to do ok
         # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
         if @testing
