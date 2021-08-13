@@ -32,7 +32,6 @@ module Jekyll
       REGEX_NOT_GREEDY = /[^\]]+/i
       # identify missing links in doc via .invalid-wiki-link class and nested doc-text.
       REGEX_INVALID_WIKI_LINK = /invalid-wiki-link#{REGEX_NOT_GREEDY}\[\[(#{REGEX_NOT_GREEDY})\]\]/i
-      REGEX_VALID_WIKI_LINK = /wiki-link[^=]*href\s*=\s*\\?"([^"\\]*)\\?"/i
 
       def initialize(config)
         @config ||= config
@@ -144,15 +143,13 @@ module Jekyll
           label: doc.data['title'],
         }
         # TODO: this link calculation ends up with duplicates -- re-visit this later.
-        # all_links = doc.content.scan(REGEX_VALID_WIKI_LINK) # doc.data['attributed'] + doc.data['backlinks']
         all_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
         if !all_links.nil?
           all_links.each do |link|
             # link = { 'type' => str, 'doc_url' => str }
             # TODO: Header + Block-level wikilinks
                                                        # remove baseurl and any anchors
-            # linked_doc = @md_docs.select{ |d| d.url == link.first.gsub(@site.baseurl, "").match(/([^#]+)/i)[0] }
-            linked_doc = @md_docs.select{ |d| d.url == link['doc_url'] }
+            linked_doc = @md_docs.select{ |d| d.url == link['doc_url'].gsub(@site.baseurl, "").match(/([^#]+)/i)[0] }
             if !linked_doc.nil? && linked_doc.size == 1 && !excluded_in_graph?(linked_doc.first.type)
               @graph_links << {
                 source: relative_url(doc.url),
