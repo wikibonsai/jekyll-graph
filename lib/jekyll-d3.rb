@@ -44,18 +44,7 @@ module Jekyll
         docs += @site.docs_to_write.filter { |d| !excluded_in_graph?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
 
-        # graph
-
-        # setup net-web
-        if !disabled_net_web?
-          @graph_nodes, @graph_links = [], []
-          @md_docs.each do |doc|
-            if !self.excluded_in_graph?(doc.type)
-              self.generate_json_net_web(doc)
-            end
-          end
-        end
-
+        # write graph
         self.write_graph_data()
       end
 
@@ -100,58 +89,74 @@ module Jekyll
 
       # helpers
 
-      def generate_json_net_web(doc)
-        Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
-        #
-        # missing nodes
-        #
-        @site.link_index.index[doc.url].missing.each do |missing_link_name|
-          if @graph_nodes.none? { |node| node[:id] == missing_link_name }
-            Jekyll.logger.warn "Net-Web node missing: ", missing_link_name
-            Jekyll.logger.warn " in: ", doc.data['slug']
-            @graph_nodes << {
-              id: missing_link_name, # an id is necessary for link targets
-              url: '',
-              label: missing_link_name,
-            }
-            @graph_links << {
-              source: relative_url(doc.url),
-              target: missing_link_name,
-            }
-          end
-        end
-        #
-        # existing nodes
-        #
-        @graph_nodes << {
-          # TODO: when using real ids, be sure to convert id to string (to_s)
-          id: relative_url(doc.url),
-          url: relative_url(doc.url),
-          label: doc.data['title'],
-        }
-        # TODO: this link calculation ends up with duplicates -- re-visit this later.
-        all_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
-        if !all_links.nil?
-          all_links.each do |link| # link = { 'type' => str, 'doc_url' => str }
-            # TODO: Header + Block-level wikilinks
-                                                       # remove baseurl and any anchors
-            linked_doc = @md_docs.select{ |d| d.url == link['doc_url'].gsub(@site.baseurl, "").match(/([^#]+)/i)[0] }
-            if !linked_doc.nil? && linked_doc.size == 1 && !excluded_in_graph?(linked_doc.first.type)
-              @graph_links << {
-                source: relative_url(doc.url),
-                target: relative_url(linked_doc.first.url),
-              }
+      def generate_json_net_web()
+        net_web_nodes, net_web_links = [], []
+
+        @md_docs.each do |doc|
+          if !self.excluded_in_graph?(doc.type)
+
+            Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
+            #
+            # missing nodes
+            #
+            @site.link_index.index[doc.url].missing.each do |missing_link_name|
+              if net_web_nodes.none? { |node| node[:id] == missing_link_name }
+                Jekyll.logger.warn "Net-Web node missing: ", missing_link_name
+                Jekyll.logger.warn " in: ", doc.data['slug']
+                net_web_nodes << {
+                  id: missing_link_name, # an id is necessary for link targets
+                  url: '',
+                  label: missing_link_name,
+                }
+                net_web_links << {
+                  source: relative_url(doc.url),
+                  target: missing_link_name,
+                }
+              end
             end
+            #
+            # existing nodes
+            #
+            net_web_nodes << {
+              # TODO: when using real ids, be sure to convert id to string (to_s)
+              id: relative_url(doc.url),
+              url: relative_url(doc.url),
+              label: doc.data['title'],
+            }
+            # TODO: this link calculation ends up with duplicates -- re-visit this later.
+            all_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
+            if !all_links.nil?
+              all_links.each do |link| # link = { 'type' => str, 'doc_url' => str }
+                # TODO: Header + Block-level wikilinks
+                                                           # remove baseurl and any anchors
+                linked_doc = @md_docs.select{ |d| d.url == link['doc_url'].gsub(@site.baseurl, "").match(/([^#]+)/i)[0] }
+                if !linked_doc.nil? && linked_doc.size == 1 && !excluded_in_graph?(linked_doc.first.type)
+                  net_web_links << {
+                    source: relative_url(doc.url),
+                    target: relative_url(linked_doc.first.url),
+                  }
+                end
+              end
+            end
+
           end
         end
+
+        return net_web_nodes, net_web_links
       end
 
       def generate_json_tree(node)
         json_node = {}
+        #
+        # missing nodes
+        #
         if !node.doc.is_a?(Jekyll::Document)
           Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
           label = node.namespace.match('([^.]*$)')[0].gsub('-', ' ')
           doc_url = ''
+        #
+        # existing nodes
+        #
         else
           label = node.title
           doc_url = relative_url(node.url)
@@ -182,10 +187,11 @@ module Jekyll
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
+          json_net_web_nodes, json_net_web_links = self.generate_json_net_web()
           # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
           File.write(@site.source + static_file.relative_path, JSON.dump({
-            links: @graph_links,
-            nodes: @graph_nodes,
+            links: json_net_web_links,
+            nodes: json_net_web_nodes,
           }))
         end
         if !disabled_tree?
