@@ -25,14 +25,6 @@ module Jekyll
       TYPE_TREE = "tree"
       WRITE_GRAPH_PATH_KEY = "path"
 
-      # TODO: Can I import these from jekyll-wikilinks?
-      # TODO: Fix REGEX_NOT_GREEDY
-      # REGEX_NOT_GREEDY = /[^(?!\]\])]+/i
-      # REGEX_NOT_GREEDY = /(?!\]\]).*/i
-      REGEX_NOT_GREEDY = /[^\]]+/i
-      # identify missing links in doc via .invalid-wiki-link class and nested doc-text.
-      REGEX_INVALID_WIKI_LINK = /invalid-wiki-link#{REGEX_NOT_GREEDY}\[\[(#{REGEX_NOT_GREEDY})\]\]/i
-
       def initialize(config)
         @config ||= config
         @testing ||= config['testing'] if config.keys.include?('testing')
@@ -115,26 +107,24 @@ module Jekyll
 
       def generate_json_net_web(doc)
         Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
+
         # missing nodes
-        missing_node_names = doc.content.scan(REGEX_INVALID_WIKI_LINK)
-        if !missing_node_names.nil?
-          missing_node_names.each do |missing_node_name_captures|
-            missing_node_name = missing_node_name_captures[0]
-            if @graph_nodes.none? { |node| node[:id] == missing_node_name }
-              Jekyll.logger.warn "Net-Web node missing: ", missing_node_name
-              Jekyll.logger.warn " in: ", doc.data['slug']
-              @graph_nodes << {
-                id: missing_node_name, # an id is necessary for links
-                url: '',
-                label: missing_node_name,
-              }
-            end
+        @site.link_index.index[doc.url].missing.each do |missing_link_name|
+          if @graph_nodes.none? { |node| node[:id] == missing_link_name }
+            Jekyll.logger.warn "Net-Web node missing: ", missing_link_name
+            Jekyll.logger.warn " in: ", doc.data['slug']
+            @graph_nodes << {
+              id: missing_link_name, # an id is necessary for link targets
+              url: '',
+              label: missing_link_name,
+            }
             @graph_links << {
               source: relative_url(doc.url),
-              target: missing_node_name,
+              target: missing_link_name,
             }
           end
         end
+
         # existing nodes
         @graph_nodes << {
           # TODO: when using real ids, be sure to convert id to string (to_s)
@@ -145,8 +135,7 @@ module Jekyll
         # TODO: this link calculation ends up with duplicates -- re-visit this later.
         all_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
         if !all_links.nil?
-          all_links.each do |link|
-            # link = { 'type' => str, 'doc_url' => str }
+          all_links.each do |link| # link = { 'type' => str, 'doc_url' => str }
             # TODO: Header + Block-level wikilinks
                                                        # remove baseurl and any anchors
             linked_doc = @md_docs.select{ |d| d.url == link['doc_url'].gsub(@site.baseurl, "").match(/([^#]+)/i)[0] }
