@@ -6,6 +6,9 @@ source "https://rubygems.org"
 gemspec
 
 gem "jekyll", "~> 4.2.0"
+gem "jekyll-namespaces", "~> 0.0.2"
+gem "jekyll-wikilinks", "~> 0.0.6"
+
 gem "rake", "~> 13.0.3"
 gem "rspec", "~> 3.10"
 gem "rubocop", "~> 1.14.0"

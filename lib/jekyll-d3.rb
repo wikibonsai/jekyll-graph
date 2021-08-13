@@ -2,7 +2,6 @@
 require "jekyll"
 
 require_relative "jekyll-d3/context"
-require_relative "jekyll-d3/tree"
 require_relative "jekyll-d3/version"
 
 module Jekyll
@@ -21,7 +20,19 @@ module Jekyll
       GRAPH_DATA_KEY = "d3_graph_data"
       ENABLED_GRAPH_DATA_KEY = "enabled"
       EXCLUDE_GRAPH_KEY = "exclude"
-      GRAPH_ASSETS_LOCATION_KEY = "path"
+      TYPE_KEY = "type"
+      TYPE_NET_WEB = "net_web"
+      TYPE_TREE = "tree"
+      WRITE_GRAPH_PATH_KEY = "path"
+
+      # TODO: Can I import these from jekyll-wikilinks?
+      # TODO: Fix REGEX_NOT_GREEDY
+      # REGEX_NOT_GREEDY = /[^(?!\]\])]+/i
+      # REGEX_NOT_GREEDY = /(?!\]\]).*/i
+      REGEX_NOT_GREEDY = /[^\]]+/i
+      # identify missing links in doc via .invalid-wiki-link class and nested doc-text.
+      REGEX_INVALID_WIKI_LINK = /invalid-wiki-link#{REGEX_NOT_GREEDY}\[\[(#{REGEX_NOT_GREEDY})\]\]/i
+      REGEX_VALID_WIKI_LINK = /wiki-link[^=]*href\s*=\s*\\?"([^"\\]*)\\?"/i
 
       def initialize(config)
         @config ||= config
@@ -30,6 +41,7 @@ module Jekyll
 
       def generate(site)
         return if disabled_graph_data?
+        Jekyll.logger.debug "Excluded jekyll types in graph: ", option_graph(EXCLUDE_GRAPH_KEY)
 
         # setup site
         @site = site
@@ -41,20 +53,38 @@ module Jekyll
         docs += @site.docs_to_write.filter { |d| !excluded_in_graph?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
 
-        # tree setup
-        @root_doc = @md_docs.detect { |doc| doc.basename == 'root.md' }
-        @tree = Tree.new(@root_doc, @md_docs)
-
         # graph
-        ## tree
-        # @tree = Jekyll::Namespaces::Tree
-        self.write_graph_tree()
+
+        # net-web
+        if !disabled_net_web?
+          @graph_nodes, @graph_links = [], []
+          @md_docs.each do |doc|
+            if !self.excluded_in_graph?(doc.type)
+              self.generate_json_net_web(doc)
+            end
+          end
+          self.write_graph_net_web()
+        end
+
+        if !disabled_tree?
+          # @root_doc = @md_docs.detect { |doc| doc.basename == 'root.md' }
+          # @tree = Tree.new(@root_doc, @md_docs)
+          self.write_graph_tree()
+        end
       end
 
       # config helpers
 
       def disabled_graph_data?
-        option_graph(ENABLED_GRAPH_DATA_KEY) == false
+        return option_graph(ENABLED_GRAPH_DATA_KEY) == false
+      end
+
+      def disabled_net_web?
+        return option_type(TYPE_NET_WEB) == false
+      end
+
+      def disabled_tree?
+        return option_type(TYPE_TREE) == false
       end
 
       def excluded_in_graph?(type)
@@ -63,7 +93,7 @@ module Jekyll
       end
 
       def has_custom_assets_path?
-        return !!option_graph(GRAPH_ASSETS_LOCATION_KEY)
+        return !!option_graph(WRITE_GRAPH_PATH_KEY)
       end
 
       def markdown_extension?(extension)
@@ -77,6 +107,83 @@ module Jekyll
       def option_graph(key)
         @config[GRAPH_DATA_KEY] && @config[GRAPH_DATA_KEY][key]
       end
+
+      def option_type(type)
+        @config[GRAPH_DATA_KEY] && @config[GRAPH_DATA_KEY][TYPE_KEY] && @config[GRAPH_DATA_KEY][TYPE_KEY][type]
+      end
+
+      # net-web
+
+      def generate_json_net_web(doc)
+        Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
+        # missing nodes
+        missing_node_names = doc.content.scan(REGEX_INVALID_WIKI_LINK)
+        if !missing_node_names.nil?
+          missing_node_names.each do |missing_node_name_captures|
+            missing_node_name = missing_node_name_captures[0]
+            if @graph_nodes.none? { |node| node[:id] == missing_node_name }
+              Jekyll.logger.warn "Net-Web node missing: ", missing_node_name
+              Jekyll.logger.warn " in: ", doc.data['slug']
+              @graph_nodes << {
+                id: missing_node_name, # an id is necessary for links
+                url: '',
+                label: missing_node_name,
+              }
+            end
+            @graph_links << {
+              source: relative_url(doc.url),
+              target: missing_node_name,
+            }
+          end
+        end
+        # existing nodes
+        @graph_nodes << {
+          # TODO: when using real ids, be sure to convert id to string (to_s)
+          id: relative_url(doc.url),
+          url: relative_url(doc.url),
+          label: doc.data['title'],
+        }
+        # TODO: this link calculation ends up with duplicates -- re-visit this later.
+        # all_links = doc.content.scan(REGEX_VALID_WIKI_LINK) # doc.data['attributed'] + doc.data['backlinks']
+        all_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
+        if !all_links.nil?
+          all_links.each do |link|
+            # link = { 'type' => str, 'doc_url' => str }
+            # TODO: Header + Block-level wikilinks
+                                                       # remove baseurl and any anchors
+            # linked_doc = @md_docs.select{ |d| d.url == link.first.gsub(@site.baseurl, "").match(/([^#]+)/i)[0] }
+            linked_doc = @md_docs.select{ |d| d.url == link['doc_url'] }
+            if !linked_doc.nil? && linked_doc.size == 1 && !excluded_in_graph?(linked_doc.first.type)
+              @graph_links << {
+                source: relative_url(doc.url),
+                target: relative_url(linked_doc.first.url),
+              }
+            end
+          end
+        end
+      end
+
+      def write_graph_net_web()
+        assets_path = has_custom_assets_path? ? option_graph(WRITE_GRAPH_PATH_KEY) : "/assets"
+        if !File.directory?(File.join(@site.source, assets_path))
+          Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
+        end
+        # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
+        # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
+        static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
+        # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
+        File.write(@site.source + static_file.relative_path, JSON.dump({
+          links: @graph_links,
+          nodes: @graph_nodes,
+        }))
+        # tests fail without manually adding the static file, but actual site builds seem to do ok
+        # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
+        if @testing
+          @site.static_files << static_file if !@site.static_files.include?(static_file)
+        end
+      end
+
+      # tree
 
       def generate_json_tree(node)
         json_node = {}
@@ -105,13 +212,14 @@ module Jekyll
       end
 
       def write_graph_tree()
-        assets_path = has_custom_assets_path? ? option_graph(GRAPH_ASSETS_LOCATION_KEY) : "/assets"
-        if !File.directory?(File.join(site.source, assets_path))
+        assets_path = has_custom_assets_path? ? option_graph(WRITE_GRAPH_PATH_KEY) : "/assets"
+        if !File.directory?(File.join(@site.source, assets_path))
           Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
         end
         # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-        static_file = Jekyll::StaticFile.new(site, site.source, assets_path, "graph-tree.json")
-        json_tree = self.generate_json_tree(@tree.root)
+        # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
+        static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
+        json_tree = self.generate_json_tree(@site.tree.root)
         File.write(@site.source + static_file.relative_path, JSON.dump(
           json_tree
         ))

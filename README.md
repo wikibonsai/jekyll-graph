@@ -6,7 +6,7 @@ TODO: Delete this and the text above, and describe your gem
 
 ## Installation
 
-Add this line to your application's Gemfile:
+1. Add this line to your application's Gemfile:
 
 ```ruby
 gem 'jekyll-d3'
@@ -20,6 +20,19 @@ Or install it yourself as:
 
     $ gem install jekyll-d3
 
+2. Default configs look like this:
+
+```
+d3_graph_data:
+  enabled: true
+  exclude: []
+  path: "/assets"
+  type:
+    net_web: true
+    tree: true
+```
+
+
 ## Usage
 
 TODO: Write usage instructions here
@@ -32,4 +45,4 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/jekyll-d3.
+Bug reports and pull requests are welcome on GitHub at https://github.com/manunamz/jekyll-d3.

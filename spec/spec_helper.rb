@@ -40,27 +40,76 @@ RSpec.configure do |config|
     site.static_files.find { |sf| sf.relative_path == relative_path }
   end
 
-  def static_graph_file_content()
-    graph_file = File.read(site_dir("/assets/graph-tree.json"))
+  ## graph retrieval helpers
+
+  def static_graph_file_content(type)
+    if type == "net-web"
+      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+    elsif type == "tree"
+      graph_file = File.read(site_dir("/assets/graph-tree.json"))
+    else
+      Jekyll.logger.error("Invalid graph type #{type}")
+    end
     JSON.parse(graph_file)
   end
 
   # TODO: write better graph data getters
+
+  def get_graph_node(type)
+    if type == "net-web"
+      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+      JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/doc/8f6277a1-b63a-4ac7-902d-d17e27cb950c/" } # "Base Case A"
+    elsif type == "tree"
+      graph_file = File.read(site_dir("/assets/graph-tree.json"))
+      JSON.parse(graph_file)["children"].find { |n| n["label"] == "Root Second Level" } # "Root Second Level"
+    else
+      Jekyll.logger.error("Invalid graph type #{type}")
+    end
+  end
+
+  # net-web
+
+  def get_graph_link_match_source()
+    graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+    all_links = JSON.parse(graph_file)["links"]
+    puts "!!", all_links
+    target_link = all_links.find_all { |l| l["source"] == "/doc/8f6277a1-b63a-4ac7-902d-d17e27cb950c/" && l["target"] == "/doc/e0c824b6-0b8c-4595-8032-b6889edd815f/" } # link "Base Case A" -> "Base Case B"
+    puts "!!!", target_link.inspect
+    if target_link.size > 1
+      raise "Expected only one link with 'source' as \"Base Case A\" note to exist."
+    else
+      return target_link[0]
+    end
+  end
+
+  def get_missing_link_graph_node()
+    graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+    JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/doc/a2157bb4-d3a6-4301-8984-b267074c45f3/" } # "Missing Doc"
+  end
+
+  def get_missing_target_graph_link()
+    graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+    all_links = JSON.parse(graph_file)["links"]
+    target_link = all_links.find_all { |l| l["source"] == "/doc/a2157bb4-d3a6-4301-8984-b267074c45f3/" } # "Missing Doc" link as source
+    if target_link.size > 1
+      raise "Expected only one link with 'source' as \"Missing Doc\" note to exist."
+    else
+      return target_link[0]
+    end
+  end
+
+  # tree
 
   def get_graph_root()
     graph_file = File.read(site_dir("/assets/graph-tree.json"))
     JSON.parse(graph_file) # "Root Level" (which includes all the children)
   end
 
-  def get_graph_node()
-    graph_file = File.read(site_dir("/assets/graph-tree.json"))
-    JSON.parse(graph_file)["children"].find { |n| n["label"] == "Root Second Level" } # "Root Second Level"
-  end
-
   def get_missing_graph_node()
     graph_file = File.read(site_dir("/assets/graph-tree.json"))
     JSON.parse(graph_file)["children"].find { |n| n["id"] == "" } # "Blank"
   end
+
 
   # comments from: https://github.com/jekyll/jekyll-mentions/blob/master/spec/spec_helper.rb
 
