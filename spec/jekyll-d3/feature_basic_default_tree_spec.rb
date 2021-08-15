@@ -2,14 +2,6 @@
 
 require "spec_helper"
 
-RSpec.describe(Jekyll::D3) do
-
-  it "has a version number" do
-    expect(Jekyll::D3::VERSION).not_to be nil
-  end
-
-end
-
 RSpec.describe(Jekyll::D3::Generator) do
   let(:config) do
     Jekyll.configuration(
