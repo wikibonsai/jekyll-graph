@@ -44,8 +44,39 @@ module Jekyll
         docs += @site.docs_to_write.filter { |d| !excluded_in_graph?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
 
+        # setup assets location
+        assets_path = has_custom_assets_path? ? option_graph(WRITE_GRAPH_PATH_KEY) : "/assets"
+        if !File.directory?(File.join(@site.source, assets_path))
+          Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
+        end
+
         # write graph
-        self.write_graph_data()
+        if !disabled_net_web?
+          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
+          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
+          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
+          json_net_web_nodes, json_net_web_links = self.generate_json_net_web()
+          # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
+          File.write(@site.source + static_file.relative_path, JSON.dump({
+            links: json_net_web_links,
+            nodes: json_net_web_nodes,
+          }))
+        end
+        if !disabled_tree?
+          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
+          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
+          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
+          json_tree = self.generate_json_tree(@site.tree.root)
+          File.write(@site.source + static_file.relative_path, JSON.dump(
+            json_tree
+          ))
+        end
+
+        # tests fail without manually adding the static file, but actual site builds seem to do ok
+        # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
+        if @testing
+          @site.static_files << static_file if !@site.static_files.include?(static_file)
+        end
       end
 
       # config helpers
@@ -175,40 +206,6 @@ module Jekyll
           "url": doc_url,
         }
         return json_node
-      end
-
-      def write_graph_data()
-        assets_path = has_custom_assets_path? ? option_graph(WRITE_GRAPH_PATH_KEY) : "/assets"
-        if !File.directory?(File.join(@site.source, assets_path))
-          Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
-        end
-
-        if !disabled_net_web?
-          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
-          json_net_web_nodes, json_net_web_links = self.generate_json_net_web()
-          # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
-          File.write(@site.source + static_file.relative_path, JSON.dump({
-            links: json_net_web_links,
-            nodes: json_net_web_nodes,
-          }))
-        end
-        if !disabled_tree?
-          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
-          json_tree = self.generate_json_tree(@site.tree.root)
-          File.write(@site.source + static_file.relative_path, JSON.dump(
-            json_tree
-          ))
-        end
-
-        # tests fail without manually adding the static file, but actual site builds seem to do ok
-        # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
-        if @testing
-          @site.static_files << static_file if !@site.static_files.include?(static_file)
-        end
       end
     end
 
