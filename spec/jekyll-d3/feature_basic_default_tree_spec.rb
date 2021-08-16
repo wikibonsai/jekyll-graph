@@ -17,7 +17,12 @@ RSpec.describe(Jekyll::D3::Generator) do
       )
     )
   end
-  let(:config_overrides)                { { "d3_graph_data" => { "type" => { "net_web" => false } } } }
+                                        # set configs to only test the tree graph
+  let(:config_overrides)                { {
+                                          "namespaces" => { "include" => "docs_tree" },
+                                          "wikilinks" => { "enabled" => false },
+                                          "d3_graph_data" => { "type" => { "net_web" => false } }
+                                        } }
   let(:site)                            { Jekyll::Site.new(config) }
 
   let(:doc_root)                        { find_by_title(site.collections["docs_tree"].docs, "Root") }
@@ -61,7 +66,11 @@ RSpec.describe(Jekyll::D3::Generator) do
       end
 
       context "when graph assets location set" do
-        let(:config_overrides) { { "d3_graph_data" => { "net_web" => false, "path" => "/custom_assets_path" } } }
+        let(:config_overrides) { {
+                                  "namespaces" => { "include" => "docs_tree" },
+                                  "wikilinks" => { "enabled" => false },
+                                  "d3_graph_data" => { "path" => "/custom_assets_path", "type" => { "net_web" => false } }
+                                } }
 
         before(:context) do
           assets_path = File.join(fixtures_dir, "custom_assets_path")
@@ -104,7 +113,7 @@ RSpec.describe(Jekyll::D3::Generator) do
           end
 
           it "'children'" do
-            expect(graph_root["children"].size).to eq(3)
+            expect(graph_root["children"].size).to eq(2)
             expect(graph_root["children"][0].keys).to eq(["id", "namespace", "label", "children", "url"])
           end
 

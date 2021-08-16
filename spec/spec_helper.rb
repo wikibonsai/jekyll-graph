@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "jekyll-d3"
+require "jekyll-namespaces"
+require "jekyll-wikilinks"
 
 Jekyll.logger.log_level = :error
 
@@ -72,9 +74,7 @@ RSpec.configure do |config|
   def get_graph_link_match_source()
     graph_file = File.read(site_dir("/assets/graph-net-web.json"))
     all_links = JSON.parse(graph_file)["links"]
-    puts "!!", all_links
     target_link = all_links.find_all { |l| l["source"] == "/doc/8f6277a1-b63a-4ac7-902d-d17e27cb950c/" && l["target"] == "/doc/e0c824b6-0b8c-4595-8032-b6889edd815f/" } # link "Base Case A" -> "Base Case B"
-    puts "!!!", target_link.inspect
     if target_link.size > 1
       raise "Expected only one link with 'source' as \"Base Case A\" note to exist."
     else

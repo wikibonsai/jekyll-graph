@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "jekyll-d3"
 require "spec_helper"
 
 RSpec.describe(Jekyll::D3::Generator) do
@@ -18,8 +17,11 @@ RSpec.describe(Jekyll::D3::Generator) do
       )
     )
   end
-
-  let(:config_overrides)                { { "d3_graph_data" => { "type" => { "tree" => false } } } }
+                                        # set configs to only test the net-web graph
+  let(:config_overrides)                { {
+                                          "namespaces" => { "enabled" => false },
+                                          "d3_graph_data" => { "type" => { "tree" => false } }
+                                        } }
   let(:site)                            { Jekyll::Site.new(config) }
 
   let(:base_case_a)                     { find_by_title(site.collections["docs_net_web"].docs, "Base Case A") }
@@ -48,12 +50,12 @@ RSpec.describe(Jekyll::D3::Generator) do
     FileUtils.rm_rf(Dir["#{site_dir()}"])
   end
 
-context "net-web" do
+  context "net-web" do
 
     context "config" do
 
       context "when disabled" do
-        let(:config_overrides) { { "d3_graph_data" => { "tree" => false, "enabled" => false } } }
+        let(:config_overrides) { { "d3_graph_data" => { "enabled" => false } } }
 
         it "does not generate graph data" do
           expect { File.read("#{fixtures_dir("/assets/graph-net-web.json")}") }.to raise_error(Errno::ENOENT)
@@ -63,7 +65,10 @@ context "net-web" do
       end
 
       context "when certain jekyll types are excluded" do
-        let(:config_overrides) { { "d3_graph_data" => { "tree" => false, "exclude" => ["pages", "posts"] } } }
+        let(:config_overrides) { {
+                                  "namespaces" => { "enabled" => false },
+                                  "d3_graph_data" => { "type" => { "tree" => false }, "exclude" => [ "pages", "posts" ] }
+                                } }
 
         it "does not generate graph data for those jekyll types" do
           expect(graph_data["nodes"].find { |n| n["title"] == "One Page" }).to eql(nil)
@@ -76,7 +81,10 @@ context "net-web" do
       end
 
       context "when assets location is set" do
-        let(:config_overrides) { { "d3_graph_data" => { "tree" => false, "path" => "/custom_assets_path" } } }
+        let(:config_overrides) { {
+                                  "namespaces" => { "enabled" => false },
+                                  "d3_graph_data" => { "path" => "/custom_assets_path", "type" => { "tree" => false } }
+                                } }
 
         before(:context) do
           assets_path = File.join(fixtures_dir, "custom_assets_path")
