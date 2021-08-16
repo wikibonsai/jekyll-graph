@@ -17,13 +17,13 @@ module Jekyll
 
       CONVERTER_CLASS = Jekyll::Converters::Markdown
       # config
-      GRAPH_DATA_KEY = "d3_graph_data"
-      ENABLED_GRAPH_DATA_KEY = "enabled"
-      EXCLUDE_GRAPH_KEY = "exclude"
+      CONFIG_KEY = "d3_graph_data"
+      ENABLED_KEY = "enabled"
+      EXCLUDE_KEY = "exclude"
       TYPE_KEY = "type"
       TYPE_NET_WEB = "net_web"
       TYPE_TREE = "tree"
-      WRITE_GRAPH_PATH_KEY = "path"
+      WRITE_PATH_KEY = "path"
 
       def initialize(config)
         @config ||= config
@@ -31,16 +31,16 @@ module Jekyll
       end
 
       def generate(site)
-        return if disabled_graph_data?
-        if !disabled_net_web? && site.link_index.nil?
+        return if disabled?
+        if !disabled_type_net_web? && site.link_index.nil?
           Jekyll.logger.error("To generate the net-web graph, please add and enable the 'jekyll-wikilinks' plugin")
           return
         end
-        if !disabled_tree? && site.tree.nil?
+        if !disabled_type_tree? && site.tree.nil?
           Jekyll.logger.error("To generate the tree graph, please add and enable the 'jekyll-namespaces' plugin")
           return
         end
-        Jekyll.logger.debug("Excluded jekyll types in graph: ", option_graph(EXCLUDE_GRAPH_KEY))
+        Jekyll.logger.debug("Excluded jekyll types in graph: ", option(EXCLUDE_KEY))
 
         # setup site
         @site = site
@@ -48,18 +48,18 @@ module Jekyll
 
         # setup markdown docs
         docs = []
-        docs += @site.pages if !excluded_in_graph?(:pages)
-        docs += @site.docs_to_write.filter { |d| !excluded_in_graph?(d.type) }
+        docs += @site.pages if !excluded?(:pages)
+        docs += @site.docs_to_write.filter { |d| !excluded?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
 
         # setup assets location
-        assets_path = has_custom_assets_path? ? option_graph(WRITE_GRAPH_PATH_KEY) : "/assets"
+        assets_path = has_custom_write_path? ? option(WRITE_PATH_KEY) : "/assets"
         if !File.directory?(File.join(@site.source, assets_path))
           Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
         end
 
         # write graph
-        if !disabled_net_web?
+        if !disabled_type_net_web?
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
@@ -70,7 +70,7 @@ module Jekyll
             nodes: json_net_web_nodes,
           }))
         end
-        if !disabled_tree?
+        if !disabled_type_tree?
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
@@ -89,25 +89,25 @@ module Jekyll
 
       # config helpers
 
-      def disabled_graph_data?
-        return option_graph(ENABLED_GRAPH_DATA_KEY) == false
+      def disabled?
+        return option(ENABLED_KEY) == false
       end
 
-      def disabled_net_web?
+      def disabled_type_net_web?
         return option_type(TYPE_NET_WEB) == false
       end
 
-      def disabled_tree?
+      def disabled_type_tree?
         return option_type(TYPE_TREE) == false
       end
 
-      def excluded_in_graph?(type)
-        return false unless option_graph(EXCLUDE_GRAPH_KEY)
-        return option_graph(EXCLUDE_GRAPH_KEY).include?(type.to_s)
+      def excluded?(type)
+        return false unless option(EXCLUDE_KEY)
+        return option(EXCLUDE_KEY).include?(type.to_s)
       end
 
-      def has_custom_assets_path?
-        return !!option_graph(WRITE_GRAPH_PATH_KEY)
+      def has_custom_write_path?
+        return !!option(WRITE_PATH_KEY)
       end
 
       def markdown_extension?(extension)
@@ -118,12 +118,12 @@ module Jekyll
         @markdown_converter ||= @site.find_converter_instance(CONVERTER_CLASS)
       end
 
-      def option_graph(key)
-        @config[GRAPH_DATA_KEY] && @config[GRAPH_DATA_KEY][key]
+      def option(key)
+        @config[CONFIG_KEY] && @config[CONFIG_KEY][key]
       end
 
       def option_type(type)
-        @config[GRAPH_DATA_KEY] && @config[GRAPH_DATA_KEY][TYPE_KEY] && @config[GRAPH_DATA_KEY][TYPE_KEY][type]
+        @config[CONFIG_KEY] && @config[CONFIG_KEY][TYPE_KEY] && @config[CONFIG_KEY][TYPE_KEY][type]
       end
 
       # helpers
@@ -132,7 +132,7 @@ module Jekyll
         net_web_nodes, net_web_links = [], []
 
         @md_docs.each do |doc|
-          if !self.excluded_in_graph?(doc.type)
+          if !self.excluded?(doc.type)
 
             Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
             #
@@ -169,7 +169,7 @@ module Jekyll
               link_no_anchor = link['doc_url'].match(/([^#]+)/i)[0]
               link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
               linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
-              if !linked_doc.nil? && linked_doc.size == 1 && !excluded_in_graph?(linked_doc.first.type)
+              if !linked_doc.nil? && linked_doc.size == 1 && !excluded?(linked_doc.first.type)
                 # TODO: add link['type'] to d3 graph
                 net_web_links << {
                   source: relative_url(doc.url),
