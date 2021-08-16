@@ -51,6 +51,9 @@ module Jekyll
         docs += @site.pages if !excluded?(:pages)
         docs += @site.docs_to_write.filter { |d| !excluded?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
+        if @md_docs.empty?
+          Jekyll.logger.debug("No documents to process.")
+        end
 
         # setup assets location
         assets_path = has_custom_write_path? ? option(WRITE_PATH_KEY) : "/assets"
