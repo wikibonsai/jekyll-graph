@@ -14,13 +14,14 @@ RSpec.describe(Jekyll::D3::Generator) do
         "url"                  => "garden.testsite.com",
         "testing"              => true,
         # "baseurl"              => "",
+        "namespaces"           => { "enabled" => false },
       )
     )
   end
                                         # set configs to only test the net-web graph
   let(:config_overrides)                { {
-                                          "namespaces" => { "enabled" => false },
-                                          "d3" => { "type" => { "tree" => false } }
+                                           "wikilinks" => { "exclude" => [ "docs_tree" ] },
+                                           "d3" => { "type" => { "tree" => false } },
                                         } }
   let(:site)                            { Jekyll::Site.new(config) }
 
@@ -55,11 +56,7 @@ RSpec.describe(Jekyll::D3::Generator) do
     context "dependencies" do
 
       context "if 'link_index' was not appended to site object (because jekyll-wikilinks was not enabled/installed)" do
-        let(:config_overrides) { {
-                                  "namespaces" => { "enabled" => false },
-                                  "wikilinks" => { "enabled" => false },
-                                  "d3" => { "type" => { "tree" => false } }
-                                } }
+        let(:config_overrides) { { "wikilinks" => { "enabled" => false } } }
 
         it "display a jekyll warning to notify user of jekyll-wikilinks dependency" do
           expect { Jekyll.logger.error }.to raise_error(ArgumentError)
@@ -83,9 +80,9 @@ RSpec.describe(Jekyll::D3::Generator) do
 
       context "when certain jekyll types are excluded" do
         let(:config_overrides) { {
-                                  "namespaces" => { "enabled" => false },
+                                  "wikilinks" => { "exclude" => [ "docs_tree" ] },
                                   "d3" => { "type" => { "tree" => false }, "exclude" => [ "pages", "posts" ] }
-                                } }
+                               } }
 
         it "does not generate graph data for those jekyll types" do
           expect(graph_data["nodes"].find { |n| n["title"] == "One Page" }).to eql(nil)
@@ -99,9 +96,9 @@ RSpec.describe(Jekyll::D3::Generator) do
 
       context "when assets location is set" do
         let(:config_overrides) { {
-                                  "namespaces" => { "enabled" => false },
-                                  "d3" => { "path" => "/custom_assets_path", "type" => { "tree" => false } }
-                                } }
+                                  "wikilinks" => { "exclude" => [ "docs_tree" ] },
+                                  "d3" => { "type" => { "tree" => false }, "path" => "/custom_assets_path" }
+                               } }
 
         before(:context) do
           assets_path = File.join(fixtures_dir, "custom_assets_path")

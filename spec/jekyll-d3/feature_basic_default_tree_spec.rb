@@ -14,13 +14,13 @@ RSpec.describe(Jekyll::D3::Generator) do
         "url"                  => "garden.testsite.com",
         "testing"              => true,
         # "baseurl"              => "",
+        "wikilinks"            => { "enabled" => false },
       )
     )
   end
                                         # set configs to only test the tree graph
   let(:config_overrides)                { {
-                                          "namespaces" => { "include" => "docs_tree" },
-                                          "wikilinks" => { "enabled" => false },
+                                          "namespaces" => { "exclude" => [ "docs_net_web" ] },
                                           "d3" => { "type" => { "net_web" => false } }
                                         } }
   let(:site)                            { Jekyll::Site.new(config) }
@@ -130,7 +130,7 @@ RSpec.describe(Jekyll::D3::Generator) do
           end
 
           it "'children'" do
-            expect(graph_root["children"].size).to eq(2)
+            expect(graph_root["children"].size).to eq(3)
             expect(graph_root["children"][0].keys).to eq(["id", "namespace", "label", "children", "url"])
           end
 
