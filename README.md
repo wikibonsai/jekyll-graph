@@ -23,7 +23,7 @@ Or install it yourself as:
 2. Default configs look like this:
 
 ```
-d3_graph_data:
+d3:
   enabled: true
   exclude: []
   path: "/assets"

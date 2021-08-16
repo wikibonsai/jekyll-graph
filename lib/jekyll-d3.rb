@@ -17,7 +17,7 @@ module Jekyll
 
       CONVERTER_CLASS = Jekyll::Converters::Markdown
       # config
-      CONFIG_KEY = "d3_graph_data"
+      CONFIG_KEY = "d3"
       ENABLED_KEY = "enabled"
       EXCLUDE_KEY = "exclude"
       TYPE_KEY = "type"

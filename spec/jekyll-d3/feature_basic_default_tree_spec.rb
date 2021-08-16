@@ -21,7 +21,7 @@ RSpec.describe(Jekyll::D3::Generator) do
   let(:config_overrides)                { {
                                           "namespaces" => { "include" => "docs_tree" },
                                           "wikilinks" => { "enabled" => false },
-                                          "d3_graph_data" => { "type" => { "net_web" => false } }
+                                          "d3" => { "type" => { "net_web" => false } }
                                         } }
   let(:site)                            { Jekyll::Site.new(config) }
 
@@ -59,7 +59,7 @@ RSpec.describe(Jekyll::D3::Generator) do
           let(:config_overrides) { {
                                     "namespaces" => { "enabled" => false },
                                     "wikilinks" => { "enabled" => false },
-                                    "d3_graph_data" => { "type" => { "net_web" => false } }
+                                    "d3" => { "type" => { "net_web" => false } }
                                   } }
 
           it "display a jekyll warning to notify user of jekyll-namespaces dependency" do
@@ -73,7 +73,7 @@ RSpec.describe(Jekyll::D3::Generator) do
     context "config" do
 
       context "when graph disabled in configs" do
-        let(:config_overrides) { { "d3_graph_data" => { "enabled" => false } } }
+        let(:config_overrides) { { "d3" => { "enabled" => false } } }
 
         it "does not generate graph data" do
           expect { File.read("#{fixtures_dir("/assets/graph-tree.json")}") }.to raise_error(Errno::ENOENT)
@@ -86,7 +86,7 @@ RSpec.describe(Jekyll::D3::Generator) do
         let(:config_overrides) { {
                                   "namespaces" => { "include" => "docs_tree" },
                                   "wikilinks" => { "enabled" => false },
-                                  "d3_graph_data" => { "path" => "/custom_assets_path", "type" => { "net_web" => false } }
+                                  "d3" => { "path" => "/custom_assets_path", "type" => { "net_web" => false } }
                                 } }
 
         before(:context) do

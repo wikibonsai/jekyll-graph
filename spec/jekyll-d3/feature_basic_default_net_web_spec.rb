@@ -20,7 +20,7 @@ RSpec.describe(Jekyll::D3::Generator) do
                                         # set configs to only test the net-web graph
   let(:config_overrides)                { {
                                           "namespaces" => { "enabled" => false },
-                                          "d3_graph_data" => { "type" => { "tree" => false } }
+                                          "d3" => { "type" => { "tree" => false } }
                                         } }
   let(:site)                            { Jekyll::Site.new(config) }
 
@@ -58,7 +58,7 @@ RSpec.describe(Jekyll::D3::Generator) do
         let(:config_overrides) { {
                                   "namespaces" => { "enabled" => false },
                                   "wikilinks" => { "enabled" => false },
-                                  "d3_graph_data" => { "type" => { "tree" => false } }
+                                  "d3" => { "type" => { "tree" => false } }
                                 } }
 
         it "display a jekyll warning to notify user of jekyll-wikilinks dependency" do
@@ -72,7 +72,7 @@ RSpec.describe(Jekyll::D3::Generator) do
     context "config" do
 
       context "when disabled" do
-        let(:config_overrides) { { "d3_graph_data" => { "enabled" => false } } }
+        let(:config_overrides) { { "d3" => { "enabled" => false } } }
 
         it "does not generate graph data" do
           expect { File.read("#{fixtures_dir("/assets/graph-net-web.json")}") }.to raise_error(Errno::ENOENT)
@@ -84,7 +84,7 @@ RSpec.describe(Jekyll::D3::Generator) do
       context "when certain jekyll types are excluded" do
         let(:config_overrides) { {
                                   "namespaces" => { "enabled" => false },
-                                  "d3_graph_data" => { "type" => { "tree" => false }, "exclude" => [ "pages", "posts" ] }
+                                  "d3" => { "type" => { "tree" => false }, "exclude" => [ "pages", "posts" ] }
                                 } }
 
         it "does not generate graph data for those jekyll types" do
@@ -100,7 +100,7 @@ RSpec.describe(Jekyll::D3::Generator) do
       context "when assets location is set" do
         let(:config_overrides) { {
                                   "namespaces" => { "enabled" => false },
-                                  "d3_graph_data" => { "path" => "/custom_assets_path", "type" => { "tree" => false } }
+                                  "d3" => { "path" => "/custom_assets_path", "type" => { "tree" => false } }
                                 } }
 
         before(:context) do
