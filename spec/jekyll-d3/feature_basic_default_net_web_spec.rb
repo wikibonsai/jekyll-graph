@@ -52,6 +52,23 @@ RSpec.describe(Jekyll::D3::Generator) do
 
   context "net-web" do
 
+    context "dependencies" do
+
+      context "if 'link_index' was not appended to site object (because jekyll-wikilinks was not enabled/installed)" do
+        let(:config_overrides) { {
+                                  "namespaces" => { "enabled" => false },
+                                  "wikilinks" => { "enabled" => false },
+                                  "d3_graph_data" => { "type" => { "tree" => false } }
+                                } }
+
+        it "display a jekyll warning to notify user of jekyll-wikilinks dependency" do
+          expect { Jekyll.logger.error }.to raise_error(ArgumentError)
+        end
+
+      end
+
+    end
+
     context "config" do
 
       context "when disabled" do

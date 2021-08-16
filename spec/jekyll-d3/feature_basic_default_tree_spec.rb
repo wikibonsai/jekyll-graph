@@ -53,6 +53,23 @@ RSpec.describe(Jekyll::D3::Generator) do
 
   context "tree" do
 
+      context "dependencies" do
+
+        context "if 'tree' was not appended to site object (because jekyll-namespaces was not enabled/installed)" do
+          let(:config_overrides) { {
+                                    "namespaces" => { "enabled" => false },
+                                    "wikilinks" => { "enabled" => false },
+                                    "d3_graph_data" => { "type" => { "net_web" => false } }
+                                  } }
+
+          it "display a jekyll warning to notify user of jekyll-namespaces dependency" do
+            expect { Jekyll.logger.error }.to raise_error(ArgumentError)
+          end
+
+        end
+
+      end
+
     context "config" do
 
       context "when graph disabled in configs" do

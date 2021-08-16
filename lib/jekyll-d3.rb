@@ -32,7 +32,15 @@ module Jekyll
 
       def generate(site)
         return if disabled_graph_data?
-        Jekyll.logger.debug "Excluded jekyll types in graph: ", option_graph(EXCLUDE_GRAPH_KEY)
+        if !disabled_net_web? && site.link_index.nil?
+          Jekyll.logger.error("To generate the net-web graph, please add and enable the 'jekyll-wikilinks' plugin")
+          return
+        end
+        if !disabled_tree? && site.tree.nil?
+          Jekyll.logger.error("To generate the tree graph, please add and enable the 'jekyll-namespaces' plugin")
+          return
+        end
+        Jekyll.logger.debug("Excluded jekyll types in graph: ", option_graph(EXCLUDE_GRAPH_KEY))
 
         # setup site
         @site = site
