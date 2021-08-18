@@ -189,27 +189,17 @@ module Jekyll
       end
 
       def generate_json_tree(node, json_parent="", tree_nodes=[], tree_links=[])
-        # dag-force-graph-related vars
-        # levels = (node.namespace == "root") ? ["root"] : ["root"] + node.namespace.split('.')
-        levels = node.namespace.split('.')
-        level = levels.length - 1
-        mod = level > 0 ? levels[1] : nil
-        leaf = levels.pop()
         #
         # missing nodes
         #
         if !node.doc.is_a?(Jekyll::Document)
           Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
+          leaf = node.namespace.split('.').pop()
           missing_node = {
-            label: node.namespace.match('([^.]*$)')[0].gsub('-', ' '), # -> leaf.gsub('-', '')
-            url: "",
-            # dag-force-graph-related
             id: node.namespace,
-            path: node.namespace,
-            leaf: leaf,
-            module: mod,
-            size: 6,
-            level: level,
+            label: leaf.gsub('-', ' '),
+            namespace: node.namespace,
+            url: "",
           }
           tree_nodes << missing_node
           if !json_parent.empty?
@@ -224,15 +214,10 @@ module Jekyll
         #
         else
           existing_node = {
-            label: node.title,
-            url: relative_url(node.url),
-            # dag-force-graph-related
             id: relative_url(node.url),
-            path: node.namespace,
-            leaf: leaf,
-            module: mod,
-            size: 6,
-            level: level,
+            label: node.title,
+            namespace: node.namespace,
+            url: relative_url(node.url),
           }
           tree_nodes << existing_node
           if !json_parent.empty?
