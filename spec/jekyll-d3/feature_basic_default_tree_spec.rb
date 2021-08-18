@@ -33,6 +33,7 @@ RSpec.describe(Jekyll::D3::Generator) do
   let(:graph_generated_fpath)           { find_generated_file("/assets/graph-tree.json") }
   let(:graph_static_file)               { find_static_file("/assets/graph-tree.json") }
   let(:graph_root)                      { get_graph_root() }
+  let(:graph_link)                      { get_graph_link_match_source("tree") }
   let(:graph_node)                      { get_graph_node("tree") }
   let(:missing_graph_node)              { get_missing_graph_node() }
 
@@ -121,17 +122,12 @@ RSpec.describe(Jekyll::D3::Generator) do
 
       context "when tree.path level exists" do
 
-        context "root node" do
+        context "json node" do
 
           it "has format: { nodes: [ {id: '', url: '', label: ''}, ... ] }" do
             expect(graph_node.keys).to include("id")
             expect(graph_node.keys).to include("url")
             expect(graph_node.keys).to include("label")
-          end
-
-          it "'children'" do
-            expect(graph_root["children"].size).to eq(3)
-            expect(graph_root["children"][0].keys).to eq(["id", "namespace", "label", "children", "url"])
           end
 
           it "'id's equal their url (since urls should be unique)" do
@@ -142,8 +138,12 @@ RSpec.describe(Jekyll::D3::Generator) do
             expect(graph_root["label"]).to eq(doc_root.data["title"])
           end
 
-          it "'namespace's equal their doc filename" do
+          it "root 'namespace's equal their doc filename" do
             expect(graph_root["namespace"]).to eq(doc_root.basename_without_ext)
+          end
+
+          it "non-root 'namespace's equal their doc filename with the 'root.' prefix" do
+            expect(graph_node["namespace"]).to eq("root." + doc_second_lvl.basename_without_ext)
           end
 
           it "'url's equal their doc urls" do
@@ -152,10 +152,21 @@ RSpec.describe(Jekyll::D3::Generator) do
 
         end
 
-        context "non-root nodes are like the root except" do
+        context "json link" do
 
-          it "'namespace's equal their doc filename + 'root.' " do
-            expect(graph_node["namespace"]).to eq("root." + doc_second_lvl.basename_without_ext)
+          it "has format: { links: [ { source: '', target: '', label: ''}, ... ] }" do
+            expect(graph_link.keys).to include("source")
+            expect(graph_link.keys).to include("target")
+          end
+
+          it "'source' equals the parent id" do
+            expect(graph_link["source"]).to eq(graph_root["id"])
+            expect(graph_root["id"]).to eq("/docs_tree/root/")
+          end
+
+          it "'target' equals the child id" do
+            expect(graph_link["target"]).to eq(graph_node["id"])
+            expect(graph_node["id"]).to eq("/docs_tree/second-level/")
           end
 
         end
@@ -167,8 +178,7 @@ RSpec.describe(Jekyll::D3::Generator) do
         context "parent of missing node" do
 
           it "has namespace of missing level in its child metadata" do
-            missing_node = graph_root['children'].find { |n| n["namespace"] == "root.blank"}
-            expect(missing_node).to_not be_nil
+            expect(doc_root["children"]).to include("root.blank")
           end
 
         end
@@ -182,8 +192,8 @@ RSpec.describe(Jekyll::D3::Generator) do
             expect(missing_graph_node.keys).to include("url")
           end
 
-          it "'id's is an empty string" do
-            expect(missing_graph_node["id"]).to eq("")
+          it "'id's equals its namespace" do
+            expect(missing_graph_node["id"]).to eq(missing_graph_node["namespace"])
           end
 
           it "'label' equals the namespace of the missing level" do

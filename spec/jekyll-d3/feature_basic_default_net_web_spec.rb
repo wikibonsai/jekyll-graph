@@ -32,7 +32,7 @@ RSpec.describe(Jekyll::D3::Generator) do
   let(:graph_generated_fpath)           { find_generated_file("/assets/graph-net-web.json") }
   let(:graph_static_file)               { find_static_file("/assets/graph-net-web.json") }
   let(:graph_node)                      { get_graph_node("net-web") }
-  let(:graph_link)                      { get_graph_link_match_source() }
+  let(:graph_link)                      { get_graph_link_match_source("net-web") }
   let(:missing_link_graph_node)         { get_missing_link_graph_node() }
   let(:missing_target_graph_link)       { get_missing_target_graph_link() }
 
