@@ -77,9 +77,10 @@ module Jekyll
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
-          json_tree = self.generate_json_tree(@site.tree.root)
+          json_tree_nodes, json_tree_links = self.generate_json_tree(@site.tree.root)
           File.write(@site.source + static_file.relative_path, JSON.dump(
-            json_tree
+            nodes: json_tree_nodes,
+            links: json_tree_links,
           ))
         end
 
@@ -187,37 +188,99 @@ module Jekyll
         return net_web_nodes, net_web_links
       end
 
-      def generate_json_tree(node)
-        json_node = {}
+      def generate_json_tree(node, json_parent="", tree_nodes=[], tree_links=[])
+        # dag-force-graph-related vars
+        # levels = (node.namespace == "root") ? ["root"] : ["root"] + node.namespace.split('.')
+        levels = node.namespace.split('.')
+        level = levels.length - 1
+        mod = level > 0 ? levels[1] : nil
+        leaf = levels.pop()
         #
         # missing nodes
         #
         if !node.doc.is_a?(Jekyll::Document)
           Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
-          label = node.namespace.match('([^.]*$)')[0].gsub('-', ' ')
-          doc_url = ''
+          missing_node = {
+            label: node.namespace.match('([^.]*$)')[0].gsub('-', ' '), # -> leaf.gsub('-', '')
+            url: "",
+            # dag-force-graph-related
+            id: node.namespace,
+            path: node.namespace,
+            leaf: leaf,
+            module: mod,
+            size: 6,
+            level: level,
+          }
+          tree_nodes << missing_node
+          if !json_parent.empty?
+            tree_links << {
+              source: json_parent[:id],
+              target: node.namespace,
+            }
+          end
+          json_parent = missing_node
         #
         # existing nodes
         #
         else
-          label = node.title
-          doc_url = relative_url(node.url)
+          existing_node = {
+            label: node.title,
+            url: relative_url(node.url),
+            # dag-force-graph-related
+            id: relative_url(node.url),
+            path: node.namespace,
+            leaf: leaf,
+            module: mod,
+            size: 6,
+            level: level,
+          }
+          tree_nodes << existing_node
+          if !json_parent.empty?
+            tree_links << {
+              source: json_parent[:id],
+              target: relative_url(node.url),
+            }
+          end
+          json_parent = existing_node
         end
-        json_children = []
         node.children.each do |child|
-          children = self.generate_json_tree(child)
-          json_children.append(children)
+          self.generate_json_tree(child, json_parent, tree_nodes, tree_links)
         end
-        json_node = {
-          # "id": doc.id,
-          "id": doc_url,
-          "namespace": node.namespace,
-          "label": label,
-          "children": json_children,
-          "url": doc_url,
-        }
-        return json_node
+        return tree_nodes, tree_links
       end
+
+      # (leftover from d3 hierarchy usage)
+      # def generate_json_tree(node)
+      #   json_node = {}
+      #   #
+      #   # missing nodes
+      #   #
+      #   if !node.doc.is_a?(Jekyll::Document)
+      #     Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
+      #     label = node.namespace.match('([^.]*$)')[0].gsub('-', ' ')
+      #     doc_url = ''
+      #   #
+      #   # existing nodes
+      #   #
+      #   else
+      #     label = node.title
+      #     doc_url = relative_url(node.url)
+      #   end
+      #   json_children = []
+      #   node.children.each do |child|
+      #     children = self.generate_json_tree(child)
+      #     json_children.append(children)
+      #   end
+      #   json_node = {
+      #     # "id": doc.id,
+      #     "id": doc_url,
+      #     "namespace": node.namespace,
+      #     "label": label,
+      #     "children": json_children,
+      #     "url": doc_url,
+      #   }
+      #   return json_node
+      # end
     end
 
   end
