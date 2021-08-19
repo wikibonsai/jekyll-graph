@@ -150,6 +150,8 @@ module Jekyll
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
                   label: missing_link_name,
+                  links: [],
+                  neighbors: [],
                 }
                 net_web_links << {
                   source: relative_url(doc.url),
@@ -165,6 +167,8 @@ module Jekyll
               id: relative_url(doc.url),
               url: relative_url(doc.url),
               label: doc.data['title'],
+              links: [],
+              neighbors: [],
             }
             # TODO: this link calculation ends up with duplicates -- re-visit this later.
             all_valid_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
@@ -194,12 +198,15 @@ module Jekyll
         #
         if !node.doc.is_a?(Jekyll::Document)
           Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
+
           leaf = node.namespace.split('.').pop()
           missing_node = {
             id: node.namespace,
             label: leaf.gsub('-', ' '),
             namespace: node.namespace,
             url: "",
+            links: [],
+            neighbors: [],
           }
           tree_nodes << missing_node
           if !json_parent.empty?
@@ -218,6 +225,8 @@ module Jekyll
             label: node.title,
             namespace: node.namespace,
             url: relative_url(node.url),
+            links: [],
+            neighbors: [],
           }
           tree_nodes << existing_node
           if !json_parent.empty?
