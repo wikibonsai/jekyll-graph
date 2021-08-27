@@ -172,9 +172,9 @@ module Jekyll
             }
             # TODO: this link calculation ends up with duplicates -- re-visit this later.
             all_valid_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
-            all_valid_links.each do |link| # link = { 'type' => str, 'doc_url' => str }
+            all_valid_links.each do |link| # link = { 'type' => str, 'url' => str }
               # TODO: Header + Block-level wikilinks
-              link_no_anchor = link['doc_url'].match(/([^#]+)/i)[0]
+              link_no_anchor = link['url'].match(/([^#]+)/i)[0]
               link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
               linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
               if !linked_doc.nil? && linked_doc.size == 1 && !excluded?(linked_doc.first.type)
