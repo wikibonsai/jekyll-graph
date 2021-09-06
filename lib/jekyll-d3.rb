@@ -10,8 +10,6 @@ module Jekyll
     class Generator < Jekyll::Generator
       priority :lowest
 
-      attr_accessor :site, :config
-
       # Use Jekyll's native relative_url filter
       include Jekyll::Filters::URLFilters
 
@@ -65,7 +63,7 @@ module Jekyll
         if !disabled_type_net_web?
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-net-web.json")
+          static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-net-web.json")
           json_net_web_nodes, json_net_web_links = self.generate_json_net_web()
           # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
           File.write(@site.source + static_file.relative_path, JSON.dump({
@@ -76,7 +74,7 @@ module Jekyll
         if !disabled_type_tree?
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-          static_file = Jekyll::StaticFile.new(site, @site.source, assets_path, "graph-tree.json")
+          static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-tree.json")
           json_tree_nodes, json_tree_links = self.generate_json_tree(@site.tree.root)
           File.write(@site.source + static_file.relative_path, JSON.dump(
             nodes: json_tree_nodes,
