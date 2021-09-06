@@ -143,7 +143,7 @@ module Jekyll
             @site.link_index.index[doc.url].missing.each do |missing_link_name|
               if net_web_nodes.none? { |node| node[:id] == missing_link_name }
                 Jekyll.logger.warn "Net-Web node missing: ", missing_link_name
-                Jekyll.logger.warn " in: ", doc.data['slug']
+                Jekyll.logger.warn " in: ", doc.data['title']
                 net_web_nodes << {
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
