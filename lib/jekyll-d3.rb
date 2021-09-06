@@ -169,8 +169,22 @@ module Jekyll
               neighbors: [],
             }
             # TODO: this link calculation ends up with duplicates -- re-visit this later.
-            all_valid_links = @site.link_index.index[doc.url].attributes + @site.link_index.index[doc.url].forelinks
-            all_valid_links.each do |link| # link = { 'type' => str, 'url' => str }
+            @site.link_index.index[doc.url].attributes.each do |link| # link = { 'type' => str, 'urls' => [str, str, ...] }
+              # TODO: Header + Block-level wikilinks
+              link['urls'].each do |lu|
+                link_no_anchor = lu.match(/([^#]+)/i)[0]
+                link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
+                linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
+                if !linked_doc.nil? && linked_doc.size == 1 && !excluded?(linked_doc.first.type)
+                  # TODO: add link['type'] to d3 graph
+                  net_web_links << {
+                    source: relative_url(doc.url),
+                    target: relative_url(linked_doc.first.url),
+                  }
+                end
+              end
+            end
+            @site.link_index.index[doc.url].forelinks.each do |link| # link = { 'type' => str, 'url' => str }
               # TODO: Header + Block-level wikilinks
               link_no_anchor = link['url'].match(/([^#]+)/i)[0]
               link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
