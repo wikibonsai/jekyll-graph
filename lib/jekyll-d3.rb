@@ -148,21 +148,16 @@ module Jekyll
       def set_relatives(json_nodes, json_links)
         # TODO: json nodes have relative_url, but node.id's/urls are doc urls.
         json_nodes.each do |json_node|
-          ancestor_node_ids, descendent_node_ids = @site.tree.get_all_relative_ids(self.remove_baseurl(json_node[:id]))
+          ancestor_node_ids, descendent_node_ids = @site.tree.get_all_relative_ids(json_node[:id])
           relative_node_ids = ancestor_node_ids.concat(descendent_node_ids)
-          json_node[:relatives][:nodes] = relative_node_ids.map { |id| relative_url(id) if id.include?('/') } if !relative_node_ids.nil?
+          json_node[:relatives][:nodes] = relative_node_ids if !relative_node_ids.nil?
 
           # include current node when filtering for links along entire relative lineage
-          lineage_ids = relative_node_ids.concat([self.remove_baseurl(json_node[:id])])
+          lineage_ids = relative_node_ids.concat([json_node[:id]])
 
-          json_relative_links = json_links.select { |l| lineage_ids.include?(self.remove_baseurl(l[:source])) && lineage_ids.include?(self.remove_baseurl(l[:target])) }
+          json_relative_links = json_links.select { |l| lineage_ids.include?(l[:source]) && lineage_ids.include?(l[:target]) }
           json_node[:relatives][:links] = json_relative_links if !json_relative_links.nil?
         end
-      end
-
-      def remove_baseurl(url)
-        return url.gsub(@site.baseurl, '') if !@site.baseurl.nil?
-        return url
       end
 
       # json generation
@@ -191,7 +186,7 @@ module Jekyll
                   },
                 }
                 net_web_links << {
-                  source: relative_url(doc.url),
+                  source: doc.url,
                   target: missing_link_name,
                 }
               end
@@ -201,7 +196,7 @@ module Jekyll
             #
             net_web_nodes << {
               # TODO: when using real ids, be sure to convert id to string (to_s)
-              id: relative_url(doc.url),
+              id: doc.url,
               url: relative_url(doc.url),
               label: doc.data['title'],
               neighbors: {
@@ -219,8 +214,8 @@ module Jekyll
                 if !linked_doc.nil? && linked_doc.size == 1 && !excluded?(linked_doc.first.type)
                   # TODO: add link['type'] to d3 graph
                   net_web_links << {
-                    source: relative_url(doc.url),
-                    target: relative_url(linked_doc.first.url),
+                    source: doc.url,
+                    target: linked_doc.first.url,
                   }
                 end
               end
@@ -233,8 +228,8 @@ module Jekyll
               if !linked_doc.nil? && linked_doc.size == 1 && !excluded?(linked_doc.first.type)
                 # TODO: add link['type'] to d3 graph
                 net_web_links << {
-                  source: relative_url(doc.url),
-                  target: relative_url(linked_doc.first.url),
+                  source: doc.url,
+                  target: linked_doc.first.url,
                 }
               end
             end
@@ -276,7 +271,7 @@ module Jekyll
         #
         else
           existing_node = {
-            id: relative_url(node.url),
+            id: node.url,
             label: node.title,
             namespace: node.namespace,
             url: relative_url(node.url),
@@ -289,7 +284,7 @@ module Jekyll
           if !json_parent.empty?
             tree_links << {
               source: json_parent[:id],
-              target: relative_url(node.url),
+              target: node.url,
             }
           end
           json_parent = existing_node
