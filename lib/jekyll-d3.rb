@@ -65,10 +65,11 @@ module Jekyll
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-net-web.json")
           json_net_web_nodes, json_net_web_links = self.generate_json_net_web()
+          self.set_neighbors(json_net_web_nodes, json_net_web_links)
           # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
           File.write(@site.source + static_file.relative_path, JSON.dump({
-            links: json_net_web_links,
             nodes: json_net_web_nodes,
+            links: json_net_web_links,
           }))
         end
         if !disabled_type_tree?
@@ -76,6 +77,7 @@ module Jekyll
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-tree.json")
           json_tree_nodes, json_tree_links = self.generate_json_tree(@site.tree.root)
+          self.set_relatives(json_tree_nodes, json_tree_links)
           File.write(@site.source + static_file.relative_path, JSON.dump(
             nodes: json_tree_nodes,
             links: json_tree_links,
@@ -130,6 +132,41 @@ module Jekyll
 
       # helpers
 
+      def set_neighbors(json_nodes, json_links)
+        json_links.each do |json_link|
+          source_node = json_nodes.detect { |n| n[:id] == json_link[:source] }
+          target_node = json_nodes.detect { |n| n[:id] == json_link[:target] }
+
+          source_node[:neighbors][:nodes] << target_node[:id]
+          target_node[:neighbors][:nodes] << source_node[:id]
+
+          source_node[:neighbors][:links] << json_link
+          target_node[:neighbors][:links] << json_link
+        end
+      end
+
+      def set_relatives(json_nodes, json_links)
+        # TODO: json nodes have relative_url, but node.id's/urls are doc urls.
+        json_nodes.each do |json_node|
+          ancestor_node_ids, descendent_node_ids = @site.tree.get_all_relative_ids(self.remove_baseurl(json_node[:id]))
+          relative_node_ids = ancestor_node_ids.concat(descendent_node_ids)
+          json_node[:relatives][:nodes] = relative_node_ids.map { |id| relative_url(id) if id.include?('/') } if !relative_node_ids.nil?
+
+          # include current node when filtering for links along entire relative lineage
+          lineage_ids = relative_node_ids.concat([self.remove_baseurl(json_node[:id])])
+
+          json_relative_links = json_links.select { |l| lineage_ids.include?(self.remove_baseurl(l[:source])) && lineage_ids.include?(self.remove_baseurl(l[:target])) }
+          json_node[:relatives][:links] = json_relative_links if !json_relative_links.nil?
+        end
+      end
+
+      def remove_baseurl(url)
+        return url.gsub(@site.baseurl, '') if !@site.baseurl.nil?
+        return url
+      end
+
+      # json generation
+
       def generate_json_net_web()
         net_web_nodes, net_web_links = [], []
 
@@ -148,8 +185,10 @@ module Jekyll
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
                   label: missing_link_name,
-                  links: [],
-                  neighbors: [],
+                  neighbors: {
+                    nodes: [],
+                    links: [],
+                  },
                 }
                 net_web_links << {
                   source: relative_url(doc.url),
@@ -165,8 +204,10 @@ module Jekyll
               id: relative_url(doc.url),
               url: relative_url(doc.url),
               label: doc.data['title'],
-              links: [],
-              neighbors: [],
+              neighbors: {
+                nodes: [],
+                links: [],
+              },
             }
             # TODO: this link calculation ends up with duplicates -- re-visit this later.
             @site.link_index.index[doc.url].attributes.each do |link| # link = { 'type' => str, 'urls' => [str, str, ...] }
@@ -217,8 +258,10 @@ module Jekyll
             label: leaf.gsub('-', ' '),
             namespace: node.namespace,
             url: "",
-            links: [],
-            neighbors: [],
+            relatives: {
+              nodes: [],
+              links: [],
+            },
           }
           tree_nodes << missing_node
           if !json_parent.empty?
@@ -237,8 +280,10 @@ module Jekyll
             label: node.title,
             namespace: node.namespace,
             url: relative_url(node.url),
-            links: [],
-            neighbors: [],
+            relatives: {
+              nodes: [],
+              links: [],
+            },
           }
           tree_nodes << existing_node
           if !json_parent.empty?
