@@ -250,7 +250,7 @@ module Jekyll
         #
         # missing nodes
         #
-        if !node.doc.is_a?(Jekyll::Document)
+        if node.missing
           Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
 
           leaf = node.namespace.split('.').pop()
