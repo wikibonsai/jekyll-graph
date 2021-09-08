@@ -52,18 +52,14 @@ RSpec.describe(Jekyll::D3::Generator) do
     FileUtils.rm_rf(Dir["#{site_dir()}"])
   end
 
-  context "tree" do
+  context "GRAPH TYPE: TREE" do
 
       context "dependencies" do
 
-        context "if 'tree' was not appended to site object (because jekyll-namespaces was not enabled/installed)" do
-          let(:config_overrides) { {
-                                    "namespaces" => { "enabled" => false },
-                                    "wikilinks" => { "enabled" => false },
-                                    "d3" => { "type" => { "net_web" => false } }
-                                  } }
+        context "require site object has 'tree' attribute (because jekyll-namespaces was not enabled/installed)" do
+          let(:config_overrides) { { "namespaces" => { "enabled" => false } } }
 
-          it "display a jekyll warning to notify user of jekyll-namespaces dependency" do
+          it "throw error if jekyll-namespaces' 'tree' is missing" do
             expect { Jekyll.logger.error }.to raise_error(ArgumentError)
           end
 
@@ -71,47 +67,7 @@ RSpec.describe(Jekyll::D3::Generator) do
 
       end
 
-    context "config" do
-
-      context "when graph disabled in configs" do
-        let(:config_overrides) { { "d3" => { "enabled" => false } } }
-
-        it "does not generate graph data" do
-          expect { File.read("#{fixtures_dir("/assets/graph-tree.json")}") }.to raise_error(Errno::ENOENT)
-          expect { File.read("#{site_dir("/assets/graph-tree.json")}") }.to raise_error(Errno::ENOENT)
-        end
-
-      end
-
-      context "when graph assets location set" do
-        let(:config_overrides) { {
-                                  "namespaces" => { "include" => "docs_tree" },
-                                  "wikilinks" => { "enabled" => false },
-                                  "d3" => { "path" => "/custom_assets_path", "type" => { "net_web" => false } }
-                                } }
-
-        before(:context) do
-          assets_path = File.join(fixtures_dir, "custom_assets_path")
-          Dir.mkdir(assets_path)
-        end
-
-        after(:context) do
-          # cleanup generated assets
-          FileUtils.rm_rf(Dir["#{fixtures_dir("/custom_assets_path/graph-tree.json")}"])
-          FileUtils.rm_rf(Dir["#{fixtures_dir("/custom_assets_path")}"])
-        end
-
-        it "writes graph file to custom location" do
-          expect(find_generated_file("/custom_assets_path/graph-tree.json")).to eq(File.join(fixtures_dir, "/custom_assets_path/graph-tree.json"))
-          expect(find_static_file("/custom_assets_path/graph-tree.json")).to be_a(Jekyll::StaticFile)
-          expect(find_static_file("/custom_assets_path/graph-tree.json").relative_path).to eq"/custom_assets_path/graph-tree.json"
-        end
-
-      end
-
-    end
-
-    context "basic default behavior" do
+    context "when doc for tree.path level exists" do
 
       it "generates graph data" do
         expect(graph_generated_fpath).to eq(File.join(fixtures_dir, "/assets/graph-tree.json"))
@@ -120,90 +76,122 @@ RSpec.describe(Jekyll::D3::Generator) do
         expect(graph_data.class).to be(Hash)
       end
 
-      context "when tree.path level exists" do
+      context "json node" do
 
-        context "json node" do
-
-          it "has format: { nodes: [ {id: '', url: '', label: ''}, ... ] }" do
-            expect(graph_node.keys).to include("id")
-            expect(graph_node.keys).to include("url")
-            expect(graph_node.keys).to include("label")
-          end
-
-          it "'id's equal their url (since urls should be unique)" do
-            expect(graph_root["id"]).to eq(graph_root["url"])
-          end
-
-          it "'label's equal their doc title" do
-            expect(graph_root["label"]).to eq(doc_root.data["title"])
-          end
-
-          it "root 'namespace's equal their doc filename" do
-            expect(graph_root["namespace"]).to eq(doc_root.basename_without_ext)
-          end
-
-          it "non-root 'namespace's equal their doc filename with the 'root.' prefix" do
-            expect(graph_node["namespace"]).to eq("root." + doc_second_lvl.basename_without_ext)
-          end
-
-          it "'url's equal their doc urls" do
-            expect(graph_root["url"]).to eq(doc_root.url)
-          end
-
+        it "has format: { nodes: [ {id: '', url: '', label: ''}, ... ] }" do
+          expect(graph_node.keys).to include("id")
+          expect(graph_node.keys).to include("url")
+          expect(graph_node.keys).to include("label")
         end
 
-        context "json link" do
+        it "'id's equal their url (since urls should be unique)" do
+          expect(graph_root["id"]).to eq(graph_root["url"])
+        end
 
-          it "has format: { links: [ { source: '', target: '', label: ''}, ... ] }" do
-            expect(graph_link.keys).to include("source")
-            expect(graph_link.keys).to include("target")
-          end
+        it "'label's equal their doc title" do
+          expect(graph_root["label"]).to eq(doc_root.data["title"])
+        end
 
-          it "'source' equals the parent id" do
-            expect(graph_link["source"]).to eq(graph_root["id"])
-            expect(graph_root["id"]).to eq("/docs_tree/root/")
-          end
+        it "root 'namespace's equal their doc filename" do
+          expect(graph_root["namespace"]).to eq(doc_root.basename_without_ext)
+        end
 
-          it "'target' equals the child id" do
-            expect(graph_link["target"]).to eq(graph_node["id"])
-            expect(graph_node["id"]).to eq("/docs_tree/second-level/")
-          end
+        it "non-root 'namespace's equal their doc filename with the 'root.' prefix" do
+          expect(graph_node["namespace"]).to eq("root." + doc_second_lvl.basename_without_ext)
+        end
 
+        it "'url's equal their doc urls" do
+          expect(graph_root["url"]).to eq(doc_root.url)
+        end
+
+        it "'relatives' is an object with keys 'nodes' and 'links'" do
+          expect(graph_root["relatives"]).to be_a(Object)
+          expect(graph_root["relatives"].keys).to eq(["nodes", "links"])
+        end
+
+        it "'relatives' 'node' is an id" do
+          expect(graph_root["relatives"]["nodes"]).to be_a(Array)
+          expect(graph_root["relatives"]["nodes"]).to eq([
+            "/one-page/",
+            "/2020/12/08/one-post/",
+            "root.blank",
+            "/docs_tree/blank.missing-lvl/",
+            "/docs_tree/second-level/",
+            "/docs_tree/second-level.third-level/",
+            "/docs_tree/root/"
+          ])
+        end
+
+        it "'relatives' 'link' is an object with 'source' and 'target', which are node ids" do
+          expect(graph_root["relatives"]["links"]).to be_a(Array)
+          expect(graph_root["relatives"]["links"]).to eq([
+            {"source"=>"/docs_tree/root/", "target"=>"/2020/12/08/one-post/"},
+            {"source"=>"/docs_tree/root/", "target"=>"root.blank"},
+            {"source"=>"root.blank", "target"=>"/docs_tree/blank.missing-lvl/"},
+            {"source"=>"/docs_tree/root/", "target"=>"/docs_tree/second-level/"},
+            {"source"=>"/docs_tree/second-level/", "target"=>"/docs_tree/second-level.third-level/"}
+          ])
         end
 
       end
 
-      context "when tree.path level does not exist" do
+      context "json link" do
 
-        context "parent of missing node" do
-
-          it "has namespace of missing level in its child metadata" do
-            expect(doc_root["children"]).to include("root.blank")
-          end
-
+        it "has format: { links: [ { source: '', target: '', label: ''}, ... ] }" do
+          expect(graph_link.keys).to include("source")
+          expect(graph_link.keys).to include("target")
         end
 
-        context "missing node" do
+        it "'source' equals the parent id" do
+          expect(graph_link["source"]).to eq(graph_root["id"])
+          expect(graph_root["id"]).to eq("/docs_tree/root/")
+        end
 
-          it "has keys: [ 'id', 'label', 'namespace', and 'url' ]" do
-            expect(missing_graph_node.keys).to include("id")
-            expect(missing_graph_node.keys).to include("label")
-            expect(missing_graph_node.keys).to include("namespace")
-            expect(missing_graph_node.keys).to include("url")
-          end
+        it "'target' equals the child id" do
+          expect(graph_link["target"]).to eq(graph_node["id"])
+          expect(graph_node["id"]).to eq("/docs_tree/second-level/")
+        end
 
-          it "'id's equals its namespace" do
-            expect(missing_graph_node["id"]).to eq(missing_graph_node["namespace"])
-          end
+      end
 
-          it "'label' equals the namespace of the missing level" do
-            expect(missing_graph_node["label"]).to eq("blank")
-          end
+    end
 
-          it "'url' is an empty string" do
-            expect(missing_graph_node["url"]).to eq("")
-          end
+    context "when doc for tree.path level does not exist" do
 
+      it "generates graph data" do
+        expect(graph_generated_fpath).to eq(File.join(fixtures_dir, "/assets/graph-tree.json"))
+        expect(graph_static_file).to be_a(Jekyll::StaticFile)
+        expect(graph_static_file.relative_path).not_to be(nil)
+        expect(graph_data.class).to be(Hash)
+      end
+
+      context "parent of missing node" do
+
+        it "has namespace of missing level in its child metadata" do
+          expect(doc_root["children"]).to include("root.blank")
+        end
+
+      end
+
+      context "missing node" do
+
+        it "has keys: [ 'id', 'label', 'namespace', and 'url' ]" do
+          expect(missing_graph_node.keys).to include("id")
+          expect(missing_graph_node.keys).to include("label")
+          expect(missing_graph_node.keys).to include("namespace")
+          expect(missing_graph_node.keys).to include("url")
+        end
+
+        it "'id's equals its namespace" do
+          expect(missing_graph_node["id"]).to eq(missing_graph_node["namespace"])
+        end
+
+        it "'label' equals the namespace of the missing level" do
+          expect(missing_graph_node["label"]).to eq("blank")
+        end
+
+        it "'url' is an empty string" do
+          expect(missing_graph_node["url"]).to eq("")
         end
 
       end

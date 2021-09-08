@@ -71,6 +71,7 @@ module Jekyll
             nodes: json_net_web_nodes,
             links: json_net_web_links,
           }))
+          self.add_static_file(static_file)
         end
         if !disabled_type_tree?
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
@@ -82,12 +83,7 @@ module Jekyll
             nodes: json_tree_nodes,
             links: json_tree_links,
           ))
-        end
-
-        # tests fail without manually adding the static file, but actual site builds seem to do ok
-        # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
-        if @testing
-          @site.static_files << static_file if !@site.static_files.include?(static_file)
+          self.add_static_file(static_file)
         end
       end
 
@@ -130,7 +126,17 @@ module Jekyll
         @config[CONFIG_KEY] && @config[CONFIG_KEY][TYPE_KEY] && @config[CONFIG_KEY][TYPE_KEY][type]
       end
 
-      # helpers
+      # generator helpers
+
+      def add_static_file(static_file)
+        # tests fail without manually adding the static file, but actual site builds seem to do ok
+        # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
+        if @testing
+          @site.static_files << static_file if !@site.static_files.include?(static_file)
+        end
+      end
+
+      # json population helpers
 
       def set_neighbors(json_nodes, json_links)
         json_links.each do |json_link|
@@ -160,7 +166,7 @@ module Jekyll
         end
       end
 
-      # json generation
+      # json generation helpers
 
       def generate_json_net_web()
         net_web_nodes, net_web_links = [], []
@@ -294,39 +300,6 @@ module Jekyll
         end
         return tree_nodes, tree_links
       end
-
-      # (leftover from d3 hierarchy usage)
-      # def generate_json_tree(node)
-      #   json_node = {}
-      #   #
-      #   # missing nodes
-      #   #
-      #   if !node.doc.is_a?(Jekyll::Document)
-      #     Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
-      #     label = node.namespace.match('([^.]*$)')[0].gsub('-', ' ')
-      #     doc_url = ''
-      #   #
-      #   # existing nodes
-      #   #
-      #   else
-      #     label = node.title
-      #     doc_url = relative_url(node.url)
-      #   end
-      #   json_children = []
-      #   node.children.each do |child|
-      #     children = self.generate_json_tree(child)
-      #     json_children.append(children)
-      #   end
-      #   json_node = {
-      #     # "id": doc.id,
-      #     "id": doc_url,
-      #     "namespace": node.namespace,
-      #     "label": label,
-      #     "children": json_children,
-      #     "url": doc_url,
-      #   }
-      #   return json_node
-      # end
     end
 
   end

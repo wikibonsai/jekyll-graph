@@ -60,7 +60,7 @@ RSpec.configure do |config|
   def get_graph_node(type)
     if type == "net-web"
       graph_file = File.read(site_dir("/assets/graph-net-web.json"))
-      JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/doc/8f6277a1-b63a-4ac7-902d-d17e27cb950c/" } # "Base Case A"
+      JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/docs_net_web/link/" }
     elsif type == "tree"
       graph_file = File.read(site_dir("/assets/graph-tree.json"))
       JSON.parse(graph_file)["nodes"].find { |n| n["namespace"] == "root.second-level" }
@@ -69,13 +69,11 @@ RSpec.configure do |config|
     end
   end
 
-  # net-web
-
   def get_graph_link_match_source(type)
     if type == "net-web"
       graph_file = File.read(site_dir("/assets/graph-net-web.json"))
       all_links = JSON.parse(graph_file)["links"]
-      target_link = all_links.find_all { |l| l["source"] == "/doc/8f6277a1-b63a-4ac7-902d-d17e27cb950c/" && l["target"] == "/doc/e0c824b6-0b8c-4595-8032-b6889edd815f/" } # link "Base Case A" -> "Base Case B"
+      target_link = all_links.find_all { |l| l["source"] == "/docs_net_web/link/" && l["target"] == "/docs_net_web/blank.a/" } # link "Untyped Link" -> "Blank A"
       if target_link.size > 1
         raise "Expected only one link with 'source' as \"Base Case A\" note to exist."
       else
@@ -95,15 +93,17 @@ RSpec.configure do |config|
     end
   end
 
+  # net-web
+
   def get_missing_link_graph_node()
     graph_file = File.read(site_dir("/assets/graph-net-web.json"))
-    JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/doc/a2157bb4-d3a6-4301-8984-b267074c45f3/" } # "Missing Doc"
+    JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "missing.doc" } # "Missing Doc"
   end
 
   def get_missing_target_graph_link()
     graph_file = File.read(site_dir("/assets/graph-net-web.json"))
     all_links = JSON.parse(graph_file)["links"]
-    target_link = all_links.find_all { |l| l["source"] == "/doc/a2157bb4-d3a6-4301-8984-b267074c45f3/" } # "Missing Doc" link as source
+    target_link = all_links.find_all { |l| l["source"] == "/docs_net_web/link.missing-doc/" } # "Missing Doc" link as source
     if target_link.size > 1
       raise "Expected only one link with 'source' as \"Missing Doc\" note to exist."
     else
