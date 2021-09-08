@@ -109,8 +109,9 @@ RSpec.describe(Jekyll::D3::Generator) do
           expect(graph_root["relatives"].keys).to eq(["nodes", "links"])
         end
 
-        it "'relatives' 'node' is an id" do
+        it "'relatives' 'node' is an array of 'id's" do
           expect(graph_root["relatives"]["nodes"]).to be_a(Array)
+          expect(graph_root["relatives"]["nodes"][0]).to be_a(String)
           expect(graph_root["relatives"]["nodes"]).to eq([
             "/one-page/",
             "/2020/12/08/one-post/",
@@ -122,9 +123,11 @@ RSpec.describe(Jekyll::D3::Generator) do
           ])
         end
 
-        it "'relatives' 'link' is an object with 'source' and 'target', which are node ids" do
+        it "'relatives' 'link' is an array of objects with 'source' and 'target' keys which are node ids" do
           expect(graph_root["relatives"]["links"]).to be_a(Array)
+          expect(graph_root["relatives"]["links"][0].keys).to eq(["source", "target"])
           expect(graph_root["relatives"]["links"]).to eq([
+            {"source"=>"/docs_tree/root/", "target"=>"/one-page/"},
             {"source"=>"/docs_tree/root/", "target"=>"/2020/12/08/one-post/"},
             {"source"=>"/docs_tree/root/", "target"=>"root.blank"},
             {"source"=>"root.blank", "target"=>"/docs_tree/blank.missing-lvl/"},
