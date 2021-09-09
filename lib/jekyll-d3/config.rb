@@ -17,7 +17,6 @@ module Jekyll
       def initialize(config)
         @config ||= config
         @testing ||= config['testing'] if config.keys.include?('testing')
-        # self.old_config_warn()
         Jekyll.logger.debug("Excluded jekyll types in graph: ", option(EXCLUDE_KEY)) unless disabled?
       end
 
