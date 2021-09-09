@@ -2,9 +2,18 @@
 require "jekyll"
 
 require_relative "jekyll-d3/context"
-require_relative "jekyll-d3/tags"
 require_relative "jekyll-d3/version"
 
+# setup config
+require_relative "jekyll-d3/config"
+Jekyll::Hooks.register :site, :after_init do |site|
+  # global '$graph_conf' to ensure that all local jekyll plugins
+  # are reading from the same configuration
+  # (global var is not ideal, but is DRY)
+  $graph_conf = Jekyll::D3::PluginConfig.new(site.config)
+end
+
+require_relative "jekyll-d3/tags"
 Liquid::Template.register_tag "force_graph", Jekyll::D3::ForceGraphTag
 Liquid::Template.register_tag "graph_scripts", Jekyll::D3::GraphScriptTag
 
@@ -18,32 +27,17 @@ module Jekyll
       include Jekyll::Filters::URLFilters
 
       CONVERTER_CLASS = Jekyll::Converters::Markdown
-      # config
-      CONFIG_KEY = "d3"
-      ENABLED_KEY = "enabled"
-      EXCLUDE_KEY = "exclude"
-      PATH_ASSETS_KEY = "assets_path"
-      PATH_SCRIPTS_KEY = "scripts_path"
-      TYPE_KEY = "type"
-      TYPE_NET_WEB = "net_web"
-      TYPE_TREE = "tree"
-
-      def initialize(config)
-        @config ||= config
-        @testing ||= config['testing'] if config.keys.include?('testing')
-      end
 
       def generate(site)
-        return if disabled?
-        if !disabled_type_net_web? && site.link_index.nil?
+        return if $graph_conf.disabled?
+        if !$graph_conf.disabled_type_net_web? && site.link_index.nil?
           Jekyll.logger.error("To generate the net-web graph, please add and enable the 'jekyll-wikilinks' plugin")
           return
         end
-        if !disabled_type_tree? && site.tree.nil?
+        if !$graph_conf.disabled_type_tree? && site.tree.nil?
           Jekyll.logger.error("To generate the tree graph, please add and enable the 'jekyll-namespaces' plugin")
           return
         end
-        Jekyll.logger.debug("Excluded jekyll types in graph: ", option(EXCLUDE_KEY))
 
         # setup site
         @site = site
@@ -51,21 +45,21 @@ module Jekyll
 
         # setup markdown docs
         docs = []
-        docs += @site.pages if !excluded?(:pages)
-        docs += @site.docs_to_write.filter { |d| !excluded?(d.type) }
+        docs += @site.pages if !$graph_conf.excluded?(:pages)
+        docs += @site.docs_to_write.filter { |d| !$graph_conf.excluded?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
         if @md_docs.empty?
           Jekyll.logger.debug("No documents to process.")
         end
 
         # setup assets location
-        assets_path = has_custom_write_path? ? option(PATH_ASSETS_KEY) : "/assets"
+        assets_path = $graph_conf.path_assets
         if !File.directory?(File.join(@site.source, assets_path))
           Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
         end
 
         # write graph
-        if !disabled_type_net_web?
+        if !$graph_conf.disabled_type_net_web?
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-net-web.json")
@@ -78,7 +72,7 @@ module Jekyll
           }))
           self.add_static_file(static_file)
         end
-        if !disabled_type_tree?
+        if !$graph_conf.disabled_type_tree?
           # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
           # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
           static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-tree.json")
@@ -91,10 +85,12 @@ module Jekyll
           self.add_static_file(static_file)
         end
         # add graph drawing scripts
-        scripts_path = has_custom_scripts_path? ? option(PATH_SCRIPTS_KEY) : File.join(assets_path, "js")
+        scripts_path = $graph_conf.path_scripts
         graph_script_content = File.read(source_path("jekyll-graph.js"))
         self.new_static_file(scripts_path, "jekyll-graph.js", graph_script_content)
       end
+
+      # helpers
 
       # from: https://github.com/jekyll/jekyll-sitemap/blob/master/lib/jekyll/jekyll-sitemap.rb#L39
       def source_path(file)
@@ -106,33 +102,6 @@ module Jekyll
         @site.static_files.any? { |p| p.url == "/#{file_path}" }
       end
 
-      # config helpers
-
-      def disabled?
-        return option(ENABLED_KEY) == false
-      end
-
-      def disabled_type_net_web?
-        return option_type(TYPE_NET_WEB) == false
-      end
-
-      def disabled_type_tree?
-        return option_type(TYPE_TREE) == false
-      end
-
-      def excluded?(type)
-        return false unless option(EXCLUDE_KEY)
-        return option(EXCLUDE_KEY).include?(type.to_s)
-      end
-
-      def has_custom_write_path?
-        return !!option(PATH_ASSETS_KEY)
-      end
-
-      def has_custom_scripts_path?
-        return !!option(PATH_SCRIPTS_KEY)
-      end
-
       def markdown_extension?(extension)
         markdown_converter.matches(extension)
       end
@@ -141,20 +110,12 @@ module Jekyll
         @markdown_converter ||= @site.find_converter_instance(CONVERTER_CLASS)
       end
 
-      def option(key)
-        @config[CONFIG_KEY] && @config[CONFIG_KEY][key]
-      end
-
-      def option_type(type)
-        @config[CONFIG_KEY] && @config[CONFIG_KEY][TYPE_KEY] && @config[CONFIG_KEY][TYPE_KEY][type]
-      end
-
       # generator helpers
 
       def add_static_file(static_file)
         # tests fail without manually adding the static file, but actual site builds seem to do ok
         # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
-        if @testing
+        if $graph_conf.testing
           @site.static_files << static_file if !@site.static_files.include?(static_file)
         end
       end
@@ -201,7 +162,7 @@ module Jekyll
         net_web_nodes, net_web_links = [], []
 
         @md_docs.each do |doc|
-          if !self.excluded?(doc.type)
+          if !$graph_conf.excluded?(doc.type)
 
             Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
             #
@@ -246,7 +207,7 @@ module Jekyll
                 link_no_anchor = lu.match(/([^#]+)/i)[0]
                 link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
                 linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
-                if !linked_doc.nil? && linked_doc.size == 1 && !excluded?(linked_doc.first.type)
+                if !linked_doc.nil? && linked_doc.size == 1 && !$graph_conf.excluded?(linked_doc.first.type)
                   # TODO: add link['type'] to d3 graph
                   net_web_links << {
                     source: doc.url,
@@ -260,7 +221,7 @@ module Jekyll
               link_no_anchor = link['url'].match(/([^#]+)/i)[0]
               link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
               linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
-              if !linked_doc.nil? && linked_doc.size == 1 && !excluded?(linked_doc.first.type)
+              if !linked_doc.nil? && linked_doc.size == 1 && !$graph_conf.excluded?(linked_doc.first.type)
                 # TODO: add link['type'] to d3 graph
                 net_web_links << {
                   source: doc.url,

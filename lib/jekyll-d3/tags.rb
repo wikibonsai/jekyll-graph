@@ -21,14 +21,7 @@ module Jekyll
 
       def render(context)
         @context = context
-        "<script type=\"module\" src=\"/jekyll-bonsai/assets/js/jekyll-graph.js\" /></script>"
-        # "<script type=\"module\" src=\"#{config.base_url}/#{config.scripts_path}/jekyll-graph.js\" /></script>"
-      end
-
-      private
-
-      def config
-        @config ||= @context.registers[:site].config
+        "<script type=\"module\" src=\"#{$graph_conf.baseurl}#{$graph_conf.path_scripts}/jekyll-graph.js\" /></script>"
       end
     end
 
