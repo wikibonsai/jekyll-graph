@@ -48,6 +48,7 @@ RSpec.describe(Jekyll::D3::Generator) do
   after(:each) do
     # cleanup generated assets
     FileUtils.rm_rf(Dir["#{fixtures_dir("/assets/graph-tree.json")}"])
+    FileUtils.rm_rf(Dir["#{fixtures_dir("/assets/js/jekyll-graph.js")}"])
     # cleanup _site/ dir
     FileUtils.rm_rf(Dir["#{site_dir()}"])
   end

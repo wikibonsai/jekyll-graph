@@ -5,6 +5,7 @@ require_relative "jekyll-d3/context"
 require_relative "jekyll-d3/tags"
 require_relative "jekyll-d3/version"
 
+Liquid::Template.register_tag "force_graph", Jekyll::D3::ForceGraphTag
 Liquid::Template.register_tag "graph_scripts", Jekyll::D3::GraphScriptTag
 
 module Jekyll
@@ -21,10 +22,11 @@ module Jekyll
       CONFIG_KEY = "d3"
       ENABLED_KEY = "enabled"
       EXCLUDE_KEY = "exclude"
+      PATH_ASSETS_KEY = "assets_path"
+      PATH_SCRIPTS_KEY = "scripts_path"
       TYPE_KEY = "type"
       TYPE_NET_WEB = "net_web"
       TYPE_TREE = "tree"
-      WRITE_PATH_KEY = "path"
 
       def initialize(config)
         @config ||= config
@@ -57,7 +59,7 @@ module Jekyll
         end
 
         # setup assets location
-        assets_path = has_custom_write_path? ? option(WRITE_PATH_KEY) : "/assets"
+        assets_path = has_custom_write_path? ? option(PATH_ASSETS_KEY) : "/assets"
         if !File.directory?(File.join(@site.source, assets_path))
           Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
         end
@@ -88,6 +90,20 @@ module Jekyll
           ))
           self.add_static_file(static_file)
         end
+        # add graph drawing scripts
+        scripts_path = has_custom_scripts_path? ? option(PATH_SCRIPTS_KEY) : File.join(assets_path, "js")
+        graph_script_content = File.read(source_path("jekyll-graph.js"))
+        self.new_static_file(scripts_path, "jekyll-graph.js", graph_script_content)
+      end
+
+      # from: https://github.com/jekyll/jekyll-sitemap/blob/master/lib/jekyll/jekyll-sitemap.rb#L39
+      def source_path(file)
+        File.expand_path "jekyll-d3/#{file}", __dir__
+      end
+
+      # Checks if a file already exists in the site source
+      def file_exists?(file_path)
+        @site.static_files.any? { |p| p.url == "/#{file_path}" }
       end
 
       # config helpers
@@ -110,7 +126,11 @@ module Jekyll
       end
 
       def has_custom_write_path?
-        return !!option(WRITE_PATH_KEY)
+        return !!option(PATH_ASSETS_KEY)
+      end
+
+      def has_custom_scripts_path?
+        return !!option(PATH_SCRIPTS_KEY)
       end
 
       def markdown_extension?(extension)
@@ -137,6 +157,12 @@ module Jekyll
         if @testing
           @site.static_files << static_file if !@site.static_files.include?(static_file)
         end
+      end
+
+      def new_static_file(path, filename, content)
+        new_static_file = Jekyll::StaticFile.new(@site, @site.source, path, filename)
+        File.write(@site.source + new_static_file.relative_path, content)
+        self.add_static_file(new_static_file)
       end
 
       # json population helpers
