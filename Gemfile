@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in jekyll-d3.gemspec
+# Specify your gem's dependencies in jekyll-graph.gemspec
 gemspec
 
 gem "jekyll", "~> 4.2.0"

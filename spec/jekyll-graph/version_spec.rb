@@ -2,10 +2,10 @@
 
 require "spec_helper"
 
-RSpec.describe(Jekyll::D3) do
+RSpec.describe(Jekyll::Graph) do
 
   it "has a version number" do
-    expect(Jekyll::D3::VERSION).not_to be nil
+    expect(Jekyll::Graph::VERSION).not_to be nil
   end
 
 end

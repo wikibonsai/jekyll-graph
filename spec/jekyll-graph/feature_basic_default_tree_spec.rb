@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe(Jekyll::D3::Generator) do
+RSpec.describe(Jekyll::Graph::Generator) do
   let(:config) do
     Jekyll.configuration(
       config_overrides.merge(
@@ -21,7 +21,7 @@ RSpec.describe(Jekyll::D3::Generator) do
                                         # set configs to only test the tree graph
   let(:config_overrides)                { {
                                           "namespaces" => { "exclude" => [ "docs_net_web" ] },
-                                          "d3" => { "type" => { "net_web" => false } }
+                                          "graph" => { "type" => { "net_web" => false } }
                                         } }
   let(:site)                            { Jekyll::Site.new(config) }
 

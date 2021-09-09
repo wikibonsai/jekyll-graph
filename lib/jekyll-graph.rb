@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 require "jekyll"
 
-require_relative "jekyll-d3/context"
-require_relative "jekyll-d3/version"
+require_relative "jekyll-graph/context"
+require_relative "jekyll-graph/version"
 
 # setup config
-require_relative "jekyll-d3/config"
+require_relative "jekyll-graph/config"
 Jekyll::Hooks.register :site, :after_init do |site|
   # global '$graph_conf' to ensure that all local jekyll plugins
   # are reading from the same configuration
   # (global var is not ideal, but is DRY)
-  $graph_conf = Jekyll::D3::PluginConfig.new(site.config)
+  $graph_conf = Jekyll::Graph::PluginConfig.new(site.config)
 end
 
-require_relative "jekyll-d3/tags"
-Liquid::Template.register_tag "force_graph", Jekyll::D3::ForceGraphTag
-Liquid::Template.register_tag "graph_scripts", Jekyll::D3::GraphScriptTag
+require_relative "jekyll-graph/tags"
+Liquid::Template.register_tag "force_graph", Jekyll::Graph::ForceGraphTag
+Liquid::Template.register_tag "graph_scripts", Jekyll::Graph::GraphScriptTag
 
 module Jekyll
-  module D3
+  module Graph
 
     class Generator < Jekyll::Generator
       priority :lowest
@@ -91,7 +91,7 @@ module Jekyll
 
       # from: https://github.com/jekyll/jekyll-sitemap/blob/master/lib/jekyll/jekyll-sitemap.rb#L39
       def source_path(file)
-        File.expand_path "jekyll-d3/#{file}", __dir__
+        File.expand_path "jekyll-graph/#{file}", __dir__
       end
 
       # Checks if a file already exists in the site source

@@ -2,10 +2,10 @@
 require "jekyll"
 
 module Jekyll
-  module D3
+  module Graph
 
     class PluginConfig
-      CONFIG_KEY = "d3"
+      CONFIG_KEY = "graph"
       ENABLED_KEY = "enabled"
       EXCLUDE_KEY = "exclude"
       PATH_ASSETS_KEY = "assets_path"

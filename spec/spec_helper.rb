@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "jekyll-d3"
+require "jekyll-graph"
 require "jekyll-namespaces"
 require "jekyll-wikilinks"
 

@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe(Jekyll::D3::Generator) do
+RSpec.describe(Jekyll::Graph::Generator) do
   let(:config) do
     Jekyll.configuration(
       config_overrides.merge(
@@ -44,7 +44,7 @@ RSpec.describe(Jekyll::D3::Generator) do
   context "CONFIG" do
 
     context "when disabled" do
-      let(:config_overrides) { { "d3" => { "enabled" => false } } }
+      let(:config_overrides) { { "graph" => { "enabled" => false } } }
 
       it "does not generate graph data" do
         # net-web
@@ -59,7 +59,7 @@ RSpec.describe(Jekyll::D3::Generator) do
 
     context "when certain jekyll types are excluded" do
       let(:config_overrides) { {
-                                "d3" => { "exclude" => [ "pages", "posts" ] }
+                                "graph" => { "exclude" => [ "pages", "posts" ] }
                              } }
 
       it "does not generate graph data for those jekyll types" do
@@ -79,7 +79,7 @@ RSpec.describe(Jekyll::D3::Generator) do
 
     context "when assets location is set" do
       let(:config_overrides) { {
-                                "d3" => { "assets_path" => "/custom_assets_path" }
+                                "graph" => { "assets_path" => "/custom_assets_path" }
                              } }
 
       before(:context) do

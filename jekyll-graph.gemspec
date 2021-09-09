@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
-require_relative "lib/jekyll-d3/version"
+require_relative "lib/jekyll-graph/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "jekyll-d3"
-  spec.version       = Jekyll::D3::VERSION
+  spec.name          = "jekyll-graph"
+  spec.version       = Jekyll::Graph::VERSION
   spec.authors       = ["manunamz"]
   spec.email         = ["manunamz@pm.me"]
 
-  spec.summary       = "Add jekyll support for d3 graph generation."
+  spec.summary       = "Add d3 graph generation to jekyll."
   # spec.description   = "TODO: Write a longer description or delete this line."
-  spec.homepage      = "https://github.com/manunamz/jekyll-d3"
+  spec.homepage      = "https://github.com/manunamz/jekyll-graph"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.4.0")
 
   spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/manunamz/jekyll-d3"
-  spec.metadata["changelog_uri"] = "https://github.com/manunamz/jekyll-d3/blob/main/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/manunamz/jekyll-graph"
+  spec.metadata["changelog_uri"] = "https://github.com/manunamz/jekyll-graph/blob/main/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.

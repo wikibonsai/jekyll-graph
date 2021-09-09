@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Jekyll
-  module D3
+  module Graph
 
     class ForceGraphTag < Liquid::Tag
       def render(context)
