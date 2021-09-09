@@ -2,7 +2,10 @@
 require "jekyll"
 
 require_relative "jekyll-d3/context"
+require_relative "jekyll-d3/tags"
 require_relative "jekyll-d3/version"
+
+Liquid::Template.register_tag "graph_scripts", Jekyll::D3::GraphScriptTag
 
 module Jekyll
   module D3
