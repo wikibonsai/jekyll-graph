@@ -60,29 +60,26 @@ module Jekyll
 
         # write graph
         if !$graph_conf.disabled_type_net_web?
-          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-          static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-net-web.json")
+          # generate json data
           json_net_web_nodes, json_net_web_links = self.generate_json_net_web()
           self.set_neighbors(json_net_web_nodes, json_net_web_links)
-          # TODO: make write file location more flexible -- requiring a write location configuration feels messy...
-          File.write(@site.source + static_file.relative_path, JSON.dump({
+          net_web_graph_content = JSON.dump(
             nodes: json_net_web_nodes,
             links: json_net_web_links,
-          }))
-          self.add_static_file(static_file)
+          )
+          # create json file
+          self.new_static_file(assets_path, "graph-net-web.json", net_web_graph_content)
         end
         if !$graph_conf.disabled_type_tree?
-          # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-          # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-          static_file = Jekyll::StaticFile.new(@site, @site.source, assets_path, "graph-tree.json")
+          # generate json data
           json_tree_nodes, json_tree_links = self.generate_json_tree(@site.tree.root)
           self.set_relatives(json_tree_nodes, json_tree_links)
-          File.write(@site.source + static_file.relative_path, JSON.dump(
+          tree_graph_content = JSON.dump(
             nodes: json_tree_nodes,
             links: json_tree_links,
-          ))
-          self.add_static_file(static_file)
+          )
+          # create json file
+          self.new_static_file(assets_path, "graph-tree.json", tree_graph_content)
         end
         # add graph drawing scripts
         scripts_path = $graph_conf.path_scripts
@@ -121,6 +118,8 @@ module Jekyll
       end
 
       def new_static_file(path, filename, content)
+        # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
+        # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
         new_static_file = Jekyll::StaticFile.new(@site, @site.source, path, filename)
         File.write(@site.source + new_static_file.relative_path, content)
         self.add_static_file(new_static_file)
