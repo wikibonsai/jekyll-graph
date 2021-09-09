@@ -15,6 +15,10 @@ module Jekyll
 
     # from: https://github.com/jekyll/jekyll-feed/blob/6d4913fe5017c685d2437f328ab4a9138cea07a8/lib/jekyll-feed/meta-tag.rb
     class GraphScriptTag < Liquid::Tag
+    # TODO: this tag is actually not being used right now --
+    #       but it's still here in case it is desirable to
+    #       allow users to access each graph via their own
+    #       div and skip scripting entirely
 
       # Use Jekyll's native relative_url filter
       include Jekyll::Filters::URLFilters
