@@ -51,10 +51,6 @@ module Jekyll
         @site = site
         @context ||= Context.new(site)
 
-        if !File.directory?(File.join(@site.source, $graph_conf.path_assets))
-          Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", $graph_conf.path_assets
-        end
-
         # setup markdown docs
         docs = []
         docs += @site.pages if !$graph_conf.excluded?(:pages)
