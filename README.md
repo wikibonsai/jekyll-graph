@@ -81,8 +81,9 @@ d3:
 ```
 
 `enabled`: turn off the plugin by setting to `false`.
-`assets_path`: custom graph file location from the root of the jekyll project.
-`scripts_path`: custom graph scripts location from the assets location of the jekyll project (if `assets_path` is set, but `scripts_path` is not, the location will default to `<assets_path>/js/`).
+`exclude`: exclude specific jekyll document types (`posts`, `pages`, `collection_items`).
+`assets_path`: custom graph file location from the root of the generated `_site/` directory.
+`scripts_path`: custom graph scripts location from the assets location of the generated `_site/` directory (if `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
 `type` toggles the `net_web` and `tree` type graphs.
 `node`: corresponds to jekyll document types (`posts`, `pages`, `collection_items`) which may be excluded under `exclude`.
 `link`: corresponds to [wikilink](https://github.com/manunamz/jekyll-wikilinks/) types (`attributes`, `typed`, `untyped`) which may be excluded under `exclude`.

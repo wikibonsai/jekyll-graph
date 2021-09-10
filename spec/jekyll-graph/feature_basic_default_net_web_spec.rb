@@ -46,9 +46,6 @@ RSpec.describe(Jekyll::Graph::Generator) do
   end
 
   after(:each) do
-    # cleanup generated assets
-    FileUtils.rm_rf(Dir["#{fixtures_dir("/assets/graph-net-web.json")}"])
-    FileUtils.rm_rf(Dir["#{fixtures_dir("/assets/js/jekyll-graph.js")}"])
     # cleanup _site/ dir
     FileUtils.rm_rf(Dir["#{site_dir()}"])
   end
@@ -71,9 +68,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
     context "when target [[wikilink]] doc exists" do
 
       it "generates graph data" do
-        expect(graph_generated_fpath).to eq(File.join(fixtures_dir, "/assets/graph-net-web.json"))
-        expect(graph_static_file).to be_a(Jekyll::StaticFile)
-        expect(graph_static_file.relative_path).not_to be(nil)
+        expect(graph_generated_fpath).to eq(File.join(site_dir, "/assets/graph-net-web.json"))
         expect(graph_data.class).to be(Hash)
       end
 
@@ -136,9 +131,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
     context "when target [[wikilink]] doc does not exist" do
 
       it "generates graph data" do
-        expect(graph_generated_fpath).to eq(File.join(fixtures_dir, "/assets/graph-net-web.json"))
-        expect(graph_static_file).to be_a(Jekyll::StaticFile)
-        expect(graph_static_file.relative_path).not_to be(nil)
+        expect(graph_generated_fpath).to eq(File.join(site_dir, "/assets/graph-net-web.json"))
         expect(graph_data.class).to be(Hash)
       end
 

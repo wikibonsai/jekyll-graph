@@ -20,6 +20,14 @@ Liquid::Template.register_tag "graph_scripts", Jekyll::Graph::GraphScriptTag
 module Jekyll
   module Graph
 
+    class PageWithoutAFile < Page
+      # rubocop:disable Naming/MemoizedInstanceVariableName
+      def read_yaml(*)
+        @data ||= {}
+      end
+      # rubocop:enable Naming/MemoizedInstanceVariableName
+    end
+
     class Generator < Jekyll::Generator
       priority :lowest
 
@@ -43,6 +51,10 @@ module Jekyll
         @site = site
         @context ||= Context.new(site)
 
+        if !File.directory?(File.join(@site.source, $graph_conf.path_assets))
+          Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", $graph_conf.path_assets
+        end
+
         # setup markdown docs
         docs = []
         docs += @site.pages if !$graph_conf.excluded?(:pages)
@@ -50,12 +62,6 @@ module Jekyll
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
         if @md_docs.empty?
           Jekyll.logger.debug("No documents to process.")
-        end
-
-        # setup assets location
-        assets_path = $graph_conf.path_assets
-        if !File.directory?(File.join(@site.source, assets_path))
-          Jekyll.logger.error "Assets location does not exist, please create required directories for path: ", assets_path
         end
 
         # write graph
@@ -68,7 +74,8 @@ module Jekyll
             links: json_net_web_links,
           )
           # create json file
-          self.new_static_file(assets_path, "graph-net-web.json", net_web_graph_content)
+          json_net_web_graph_file = self.new_page($graph_conf.path_assets, "graph-net-web.json", net_web_graph_content)
+          self.register_static_file(json_net_web_graph_file)
         end
         if !$graph_conf.disabled_type_tree?
           # generate json data
@@ -79,12 +86,14 @@ module Jekyll
             links: json_tree_links,
           )
           # create json file
-          self.new_static_file(assets_path, "graph-tree.json", tree_graph_content)
+          json_tree_graph_file = self.new_page($graph_conf.path_assets, "graph-tree.json", tree_graph_content)
+          self.register_static_file(json_tree_graph_file)
         end
         # add graph drawing scripts
-        scripts_path = $graph_conf.path_scripts
-        graph_script_content = File.read(source_path("jekyll-graph.js"))
-        self.new_static_file(scripts_path, "jekyll-graph.js", graph_script_content)
+        script_filename = "jekyll-graph.js"
+        graph_script_content = File.read(source_path(script_filename))
+        static_file = self.new_page($graph_conf.path_scripts, script_filename, graph_script_content)
+        self.register_static_file(static_file)
       end
 
       # helpers
@@ -109,20 +118,21 @@ module Jekyll
 
       # generator helpers
 
-      def add_static_file(static_file)
+      def new_page(path, filename, content)
+        new_file = PageWithoutAFile.new(@site, __dir__, "", filename)
+        new_file.content = content
+        new_file.data["layout"] = nil
+        new_file.data["permalink"] = File.join(path, filename)
+        @site.pages << new_file unless file_exists?(filename)
+        return new_file
+      end
+
+      def register_static_file(static_file)
         # tests fail without manually adding the static file, but actual site builds seem to do ok
         # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
         if $graph_conf.testing
           @site.static_files << static_file if !@site.static_files.include?(static_file)
         end
-      end
-
-      def new_static_file(path, filename, content)
-        # from: https://github.com/jekyll/jekyll/issues/7195#issuecomment-415696200
-        # (also this: https://stackoverflow.com/questions/19835729/copying-generated-files-from-a-jekyll-plugin-to-a-site-resource-folder)
-        new_static_file = Jekyll::StaticFile.new(@site, @site.source, path, filename)
-        File.write(@site.source + new_static_file.relative_path, content)
-        self.add_static_file(new_static_file)
       end
 
       # json population helpers

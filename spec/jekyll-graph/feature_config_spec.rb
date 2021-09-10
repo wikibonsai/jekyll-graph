@@ -33,10 +33,6 @@ RSpec.describe(Jekyll::Graph::Generator) do
   end
 
   after(:each) do
-    # cleanup generated assets
-    FileUtils.rm_rf(Dir["#{fixtures_dir("/assets/graph-net-web.json")}"])
-    FileUtils.rm_rf(Dir["#{fixtures_dir("/assets/graph-tree.json")}"])
-    FileUtils.rm_rf(Dir["#{fixtures_dir("/assets/js/jekyll-graph.js")}"])
     # cleanup _site/ dir
     FileUtils.rm_rf(Dir["#{site_dir()}"])
   end
@@ -48,10 +44,10 @@ RSpec.describe(Jekyll::Graph::Generator) do
 
       it "does not generate graph data" do
         # net-web
-        expect { File.read("#{fixtures_dir("/assets/graph-net-web.json")}") }.to raise_error(Errno::ENOENT)
+        expect { File.read("#{site_dir("/assets/graph-net-web.json")}") }.to raise_error(Errno::ENOENT)
         expect { File.read("#{site_dir("/assets/graph-net-web.json")}") }.to raise_error(Errno::ENOENT)
         # tree
-        expect { File.read("#{fixtures_dir("/assets/graph-tree.json")}") }.to raise_error(Errno::ENOENT)
+        expect { File.read("#{site_dir("/assets/graph-tree.json")}") }.to raise_error(Errno::ENOENT)
         expect { File.read("#{site_dir("/assets/graph-tree.json")}") }.to raise_error(Errno::ENOENT)
       end
 
@@ -82,31 +78,18 @@ RSpec.describe(Jekyll::Graph::Generator) do
                                 "graph" => { "assets_path" => "/custom_assets_path" }
                              } }
 
-      before(:context) do
-        assets_path = File.join(fixtures_dir, "custom_assets_path")
-        Dir.mkdir(assets_path)
-        Dir.mkdir(File.join(assets_path, "js"))
-      end
-
       after(:context) do
         # cleanup generated assets from custom location
-        FileUtils.rm_rf(Dir["#{fixtures_dir("/custom_assets_path/graph-net-web.json")}"])
-        FileUtils.rm_rf(Dir["#{fixtures_dir("/custom_assets_path/graph-tree.json")}"])
-        FileUtils.rm_rf(Dir["#{fixtures_dir("/custom_assets_path/js/jekyll-graph.js")}"])
-        FileUtils.rm_rf(Dir["#{fixtures_dir("/custom_assets_path")}"])
+        FileUtils.rm_rf(Dir["#{site_dir("/custom_assets_path")}"])
       end
 
       it "writes graph file to custom location" do
         # net-web
-        expect(find_generated_file("/custom_assets_path/graph-net-web.json")).to eq(File.join(fixtures_dir, "/custom_assets_path/graph-net-web.json"))
-        expect(find_static_file("/custom_assets_path/graph-net-web.json")).to be_a(Jekyll::StaticFile)
-        expect(find_static_file("/custom_assets_path/graph-net-web.json").relative_path).to eq("/custom_assets_path/graph-net-web.json")
+        expect(find_generated_file("/custom_assets_path/graph-net-web.json")).to eq(File.join(site_dir, "/custom_assets_path/graph-net-web.json"))
         # tree
-        expect(find_generated_file("/custom_assets_path/graph-tree.json")).to eq(File.join(fixtures_dir, "/custom_assets_path/graph-tree.json"))
-        expect(find_static_file("/custom_assets_path/graph-tree.json")).to be_a(Jekyll::StaticFile)
-        expect(find_static_file("/custom_assets_path/graph-tree.json").relative_path).to eq("/custom_assets_path/graph-tree.json")
+        expect(find_generated_file("/custom_assets_path/graph-tree.json")).to eq(File.join(site_dir, "/custom_assets_path/graph-tree.json"))
         # scripts
-        expect(find_static_file("/custom_assets_path/js/jekyll-graph.js").relative_path).to eq("/custom_assets_path/js/jekyll-graph.js")
+        expect(find_generated_file("/custom_assets_path/js/jekyll-graph.js")).to eq(File.join(site_dir, "/custom_assets_path/js/jekyll-graph.js"))
       end
 
     end
