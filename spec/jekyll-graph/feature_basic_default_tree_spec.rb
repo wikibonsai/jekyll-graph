@@ -21,7 +21,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
                                         # set configs to only test the tree graph
   let(:config_overrides)                { {
                                           "namespaces" => { "exclude" => [ "docs_net_web" ] },
-                                          "graph" => { "type" => { "net_web" => false } }
+                                          "graph" => { "net_web" => { "enabled" => false } }
                                         } }
   let(:site)                            { Jekyll::Site.new(config) }
 

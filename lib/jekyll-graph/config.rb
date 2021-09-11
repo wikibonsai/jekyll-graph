@@ -8,11 +8,11 @@ module Jekyll
       CONFIG_KEY = "graph"
       ENABLED_KEY = "enabled"
       EXCLUDE_KEY = "exclude"
+      NET_WEB_KEY = "net_web"
       PATH_ASSETS_KEY = "assets_path"
       PATH_SCRIPTS_KEY = "scripts_path"
+      TREE_KEY = "tree"
       TYPE_KEY = "type"
-      TYPE_NET_WEB = "net_web"
-      TYPE_TREE = "tree"
 
       def initialize(config)
         @config ||= config
@@ -26,12 +26,12 @@ module Jekyll
         return option(ENABLED_KEY) == false
       end
 
-      def disabled_type_net_web?
-        return option_type(TYPE_NET_WEB) == false
+      def disabled_net_web?
+        return option_net_web(ENABLED_KEY) == false
       end
 
-      def disabled_type_tree?
-        return option_type(TYPE_TREE) == false
+      def disabled_tree?
+        return option_tree(ENABLED_KEY) == false
       end
 
       def excluded?(type)
@@ -51,8 +51,12 @@ module Jekyll
         @config[CONFIG_KEY] && @config[CONFIG_KEY][key]
       end
 
-      def option_type(type)
-        @config[CONFIG_KEY] && @config[CONFIG_KEY][TYPE_KEY] && @config[CONFIG_KEY][TYPE_KEY][type]
+      def option_net_web(key)
+        @config[CONFIG_KEY] && @config[CONFIG_KEY][NET_WEB_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][key]
+      end
+
+      def option_tree(key)
+        @config[CONFIG_KEY] && @config[CONFIG_KEY][TREE_KEY] && @config[CONFIG_KEY][TREE_KEY][key]
       end
 
       # attrs

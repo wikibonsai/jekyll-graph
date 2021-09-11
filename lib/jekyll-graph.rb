@@ -8,7 +8,7 @@ require_relative "jekyll-graph/version"
 require_relative "jekyll-graph/config"
 Jekyll::Hooks.register :site, :after_init do |site|
   # global '$graph_conf' to ensure that all local jekyll plugins
-  # are reading from the same configuration
+  # are reading from the same configuration with the same helper methods
   # (global var is not ideal, but is DRY)
   $graph_conf = Jekyll::Graph::PluginConfig.new(site.config)
 end
@@ -38,11 +38,11 @@ module Jekyll
 
       def generate(site)
         return if $graph_conf.disabled?
-        if !$graph_conf.disabled_type_net_web? && site.link_index.nil?
+        if !$graph_conf.disabled_net_web? && site.link_index.nil?
           Jekyll.logger.error("To generate the net-web graph, please add and enable the 'jekyll-wikilinks' plugin")
           return
         end
-        if !$graph_conf.disabled_type_tree? && site.tree.nil?
+        if !$graph_conf.disabled_tree? && site.tree.nil?
           Jekyll.logger.error("To generate the tree graph, please add and enable the 'jekyll-namespaces' plugin")
           return
         end
@@ -61,7 +61,7 @@ module Jekyll
         end
 
         # write graph
-        if !$graph_conf.disabled_type_net_web?
+        if !$graph_conf.disabled_net_web?
           # generate json data
           json_net_web_nodes, json_net_web_links = self.generate_json_net_web()
           self.set_neighbors(json_net_web_nodes, json_net_web_links)
@@ -73,7 +73,7 @@ module Jekyll
           json_net_web_graph_file = self.new_page($graph_conf.path_assets, "graph-net-web.json", net_web_graph_content)
           self.register_static_file(json_net_web_graph_file)
         end
-        if !$graph_conf.disabled_type_tree?
+        if !$graph_conf.disabled_tree?
           # generate json data
           json_tree_nodes, json_tree_links = self.generate_json_tree(@site.tree.root)
           self.set_relatives(json_tree_nodes, json_tree_links)
