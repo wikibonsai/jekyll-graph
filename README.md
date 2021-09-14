@@ -1,26 +1,16 @@
-# Jekyll::Graph
+# Jekyll-Graph
 
-Jekyll-Graph generates graph data and renders a graph that allows visitors to navigate the jekyll site by clicking nodes in the graph. Nodes are generated from the site's markdown files. Links for the tree graph are generated from `jekyll-namespaces` and links for the net-web graph from `jekyll-wikilinks`.
+⚠️ This is gem is under active development! ⚠️
+
+⚠️ Expect breaking changes and surprises until otherwise noted (likely by v0.1.0 or v1.0.0). ⚠️
+
+Jekyll-Graph generates data and renders a graph that allows visitors to navigate a jekyll site by clicking nodes in the graph. Nodes are generated from the site's markdown files. Links for the tree graph are generated from `jekyll-namespaces` and links for the net-web graph from `jekyll-wikilinks`.
+
+This gem is part of the [jekyll-bonsai](https://manunamz.github.io/jekyll-bonsai/) project. 🎋
 
 ## Installation
 
-1. Add this line to your application's Gemfile:
-
-```
-$ gem 'jekyll-graph'
-```
-
-And then execute:
-
-```
-$ bundle install
-```
-
-Or install it yourself as:
-
-```
-$ gem install jekyll-graph
-```
+Follow the instructions for installing a [jekyll plugin](https://jekyllrb.com/docs/plugins/installation/) for `jekyll-graph`.
 
 ## Usage
 
@@ -42,55 +32,90 @@ $ gem install jekyll-graph
 <div id="jekyll-graph"></div>
 ```
 
-3. Hook up scripts to draw graph via the `JekyllGraph` class like so:
+3. Subclass `JekyllGraph` class in javascript like so:
 
 ```javascript
 import JekyllGraph from './jekyll-graph.js';
 
-export default class GraphNav {
+export default class JekyllGraphSubClass {
   ...
 }
 
 // subclass
 // Hook up the instance properties
-Object.setPrototypeOf(GraphNav.prototype, JekyllGraph.prototype);
+Object.setPrototypeOf(JekyllGraphSubClass.prototype, JekyllGraph.prototype);
 
 // Hook up the static properties
-Object.setPrototypeOf(GraphNav, JekyllGraph);
+Object.setPrototypeOf(JekyllGraphSubClass, JekyllGraph);
 
 ```
+Call `this.drawNetWeb()` and `this.drawTree()` to actually draw the graph. You could do this simply on initialization or on a button click, etc.
 
-Call `drawNetWeb()` and `drawTree()` to actually draw the graph.
+Unless otherwise defined, the `jekyll-graph.js` file will be generated into `_site/assets/scripts/`.
 
-## Configurables
+## Configuration
 
 Default configs look like this:
 
 ```yml
-d3:
+graph:
   enabled: true
+  exclude: []
   assets_path: "/assets"
   scripts_path: "/assets/js"
-  type:
-    net_web: true
-    tree: true
-  node:
-    exclude: []
-  link:
-    exclude: []
+  tree:
+    enabled: true
+    force:
+      charge:
+      strength_x:
+      x_val:
+      strength_y:
+      y_val:
+  net_web:
+    enabled: true
+    force:
+      charge:
+      strength_x:
+      x_val:
+      strength_y:
+      y_val:
 ```
 
-`enabled`: turn off the plugin by setting to `false`.
-`exclude`: exclude specific jekyll document types (`posts`, `pages`, `collection_items`).
-`assets_path`: custom graph file location from the root of the generated `_site/` directory.
-`scripts_path`: custom graph scripts location from the assets location of the generated `_site/` directory (if `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
-`type` toggles the `net_web` and `tree` type graphs.
-`node`: corresponds to jekyll document types (`posts`, `pages`, `collection_items`) which may be excluded under `exclude`.
-`link`: corresponds to [wikilink](https://github.com/manunamz/jekyll-wikilinks/) types (`attributes`, `typed`, `untyped`) which may be excluded under `exclude`.
+`enabled`: Turn off the plugin by setting to `false`.
+`exclude`: Exclude specific jekyll document types (`posts`, `pages`, `collection_items`).
+`assets_path`: Custom graph file location from the root of the generated `_site/` directory.
+`scripts_path`: Custom graph scripts location from the assets location of the generated `_site/` directory (If `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
+`tree.enabled` and `net_web.enabled`: Toggles on/off the `tree` and `net_web` graphs, respectively.
+`tree.force` and `net_web.force`: These are force variables from d3's simulation forces. You can check out the [docs for details](https://github.com/d3/d3-force#simulation_force).
+
+Force values will likely need to be played with depending on the div size and number of nodes. [jekyll-bonsai](https://manunamz.github.io/jekyll-bonsai/) currently uses these values:
+
+```yaml
+graph:
+  tree:
+    # enabled: true
+    dag_lvl_dist: 100
+    force:
+      charge: -100
+      strength_x: 0.3
+      x_val: 0.9
+      strength_y: 0.1
+      y_val: 0.9
+  net_web:
+    # enabled: true
+    force:
+      charge: -300
+      strength_x: 0.3
+      x_val: 0.75
+      strength_y: 0.1
+      y_val: 0.9
+```
+
+No configurations are strictly necessary for plugin defaults to work.
 
 ## Colors
 
-Graph colors are determined by css vars which may be defined like so -- any valid css color works (hex, rgba, etc.):
+Graph colors are determined by css variables which may be defined like so -- any valid css color works (hex, rgba, etc.):
 
 ```CSS
   /* nodes */
@@ -112,15 +137,16 @@ Graph colors are determined by css vars which may be defined like so -- any vali
 ```
 
 ## Data
-Graph data is generated and output to `.json` files in your `/assets` directory in the following format:
+Graph data is generated in the following format:
 
-```
+For the net-web graph, `graph-net-web.json`,`links` are built from `backlinks` and `attributed` metadata generated in `jekyll-wikilinks`:
+```json
 // graph-net-web.json
 {
   "nodes": [
     {
       "id": "<some-id>",
-      "url": "<relative-url>", // site.baseurl is handled for you here via "relative_url" usage
+      "url": "<relative-url>", // site.baseurl is handled for you here
       "label": "<note's-title>",
       "neighbors": {
           "nodes": [<neighbor-node>, ...],
@@ -138,17 +164,14 @@ Graph data is generated and output to `.json` files in your `/assets` directory 
   ]
 }
 ```
-
-`links` are built from `backlinks` and `attributed` from `jekyll-wikilinks`.
-
-
-```
+For the tree graph, `graph-tree.json`, `links` are built from a tree data structure constructed in `jekyll-namespaces`:
+```json
 // graph-tree.json
 {
   "nodes": [
     {
       "id": "<some-id>",
-      "url": "<relative-url>", // site.baseurl is handled for you here via "relative_url" usage
+      "url": "<relative-url>", // site.baseurl wil be handled for you here
       "label": "<note's-title>",
       "relatives": {
           "nodes": [<relative-node>, ...],
@@ -166,15 +189,4 @@ Graph data is generated and output to `.json` files in your `/assets` directory 
   ]
 }
 ```
-
-`links` are built from file namespacing from `jekyll-namespaces`.
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/manunamz/jekyll-graph.
+Unless otherwise defined, both json files are generated into `_site/assets/`.
