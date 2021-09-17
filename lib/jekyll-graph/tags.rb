@@ -3,7 +3,7 @@
 module Jekyll
   module Graph
 
-    class ForceGraphTag < Liquid::Tag
+    class HeadTag < Liquid::Tag
       def render(context)
         [
           "<script src=\"//unpkg.com/element-resize-detector/dist/element-resize-detector.min.js\"></script>",

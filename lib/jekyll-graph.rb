@@ -15,7 +15,7 @@ Jekyll::Hooks.register :site, :after_init do |site|
 end
 
 require_relative "jekyll-graph/tags"
-Liquid::Template.register_tag "force_graph", Jekyll::Graph::ForceGraphTag
+Liquid::Template.register_tag "jekyll_graph", Jekyll::Graph::HeadTag
 Liquid::Template.register_tag "graph_scripts", Jekyll::Graph::GraphScriptTag
 
 module Jekyll

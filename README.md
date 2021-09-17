@@ -14,14 +14,14 @@ Follow the instructions for installing a [jekyll plugin](https://jekyllrb.com/do
 
 ## Usage
 
-1. Add `{% force_graph %}` to the site head:
+1. Add `{% jekyll_graph %}` to the site head:
 
 ```html
 <head>
 
   ...
 
-  {% force_graph %}
+  {% jekyll_graph %}
 
 </head>
 ```
