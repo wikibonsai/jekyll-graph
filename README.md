@@ -4,7 +4,7 @@
 
 ⚠️ Expect breaking changes and surprises until otherwise noted (likely by v0.1.0 or v1.0.0). ⚠️
 
-Jekyll-Graph generates data and renders a graph that allows visitors to navigate a jekyll site by clicking nodes in the graph. Nodes are generated from the site's markdown files. Links for the tree graph are generated from `jekyll-namespaces` and links for the net-web graph from `jekyll-wikilinks`.
+Jekyll-Graph generates data and renders a graph that allows visitors to navigate a jekyll site by clicking nodes in the graph. Nodes are generated from the site's markdown files. Links for the tree graph are generated from [`jekyll-namespaces`](https://github.com/manunamz/jekyll-namespaces) and links for the net-web graph from [`jekyll-wikilinks`](https://github.com/manunamz/jekyll-wikilinks).
 
 This gem is part of the [jekyll-bonsai](https://manunamz.github.io/jekyll-bonsai/) project. 🎋
 
@@ -82,10 +82,15 @@ graph:
 ```
 
 `enabled`: Turn off the plugin by setting to `false`.
+
 `exclude`: Exclude specific jekyll document types (`posts`, `pages`, `collection_items`).
+
 `assets_path`: Custom graph file location from the root of the generated `_site/` directory.
+
 `scripts_path`: Custom graph scripts location from the assets location of the generated `_site/` directory (If `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
+
 `tree.enabled` and `net_web.enabled`: Toggles on/off the `tree` and `net_web` graphs, respectively.
+
 `tree.force` and `net_web.force`: These are force variables from d3's simulation forces. You can check out the [docs for details](https://github.com/d3/d3-force#simulation_force).
 
 Force values will likely need to be played with depending on the div size and number of nodes. [jekyll-bonsai](https://manunamz.github.io/jekyll-bonsai/) currently uses these values:
