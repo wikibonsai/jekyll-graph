@@ -2,6 +2,7 @@
 require "jekyll"
 
 require_relative "jekyll-graph/context"
+require_relative "jekyll-graph/page"
 require_relative "jekyll-graph/version"
 
 # setup config
@@ -19,14 +20,6 @@ Liquid::Template.register_tag "graph_scripts", Jekyll::Graph::GraphScriptTag
 
 module Jekyll
   module Graph
-
-    class PageWithoutAFile < Page
-      # rubocop:disable Naming/MemoizedInstanceVariableName
-      def read_yaml(*)
-        @data ||= {}
-      end
-      # rubocop:enable Naming/MemoizedInstanceVariableName
-    end
 
     class Generator < Jekyll::Generator
       priority :lowest
