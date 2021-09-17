@@ -125,6 +125,7 @@ module Jekyll
       end
 
       # json population helpers
+      #  set ids here, full javascript objects are populated in client-side javascript.
 
       def set_neighbors(json_nodes, json_links)
         json_links.each do |json_link|
