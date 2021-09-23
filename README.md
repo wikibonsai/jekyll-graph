@@ -38,6 +38,11 @@ Follow the instructions for installing a [jekyll plugin](https://jekyllrb.com/do
 import JekyllGraph from './jekyll-graph.js';
 
 export default class JekyllGraphSubClass {
+
+  constructor() {
+   this.graphDiv = document.getElementById('jekyll-graph');
+  }
+  
   ...
 }
 
