@@ -37,17 +37,14 @@ Follow the instructions for installing a [jekyll plugin](https://jekyllrb.com/do
 ```javascript
 import JekyllGraph from './jekyll-graph.js';
 
-export default class JekyllGraphSubClass {
+export default class JekyllGraphSubClass extends JekyllGraph {
+
+  constructor() {
+    super();
+    // access graph div with 'this.graphDiv'
+  }
   ...
 }
-
-// subclass
-// Hook up the instance properties
-Object.setPrototypeOf(JekyllGraphSubClass.prototype, JekyllGraph.prototype);
-
-// Hook up the static properties
-Object.setPrototypeOf(JekyllGraphSubClass, JekyllGraph);
-
 ```
 Call `this.drawNetWeb()` and `this.drawTree()` to actually draw the graph. You could do this simply on initialization or on a button click, etc.
 
