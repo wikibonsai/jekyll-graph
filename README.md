@@ -43,7 +43,8 @@ export default class JekyllGraphSubClass extends JekyllGraph {
     super();
     // access graph div with 'this.graphDiv'
   }
-  ...
+  
+  // ...
 }
 ```
 Call `this.drawNetWeb()` and `this.drawTree()` to actually draw the graph. You could do this simply on initialization or on a button click, etc.
