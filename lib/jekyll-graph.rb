@@ -31,12 +31,12 @@ module Jekyll
 
       def generate(site)
         return if $graph_conf.disabled?
-        if !$graph_conf.disabled_net_web? && site.link_index.nil?
-          Jekyll.logger.error("To generate the net-web graph, please add and enable the 'jekyll-wikilinks' plugin")
+        if !$graph_conf.disabled_net_web? && !site.respond_to?(:link_index)
+          Jekyll.logger.error("To generate the net-web graph, please either add and enable the 'jekyll-wikilinks' plugin or disable the net-web in the jekyll-graph config")
           return
         end
-        if !$graph_conf.disabled_tree? && site.tree.nil?
-          Jekyll.logger.error("To generate the tree graph, please add and enable the 'jekyll-namespaces' plugin")
+        if !$graph_conf.disabled_tree? && !site.respond_to?(:tree)
+          Jekyll.logger.error("To generate the tree graph, please either add and enable the 'jekyll-namespaces' plugin  or disable the tree in the jekyll-graph config")
           return
         end
 
@@ -143,6 +143,8 @@ module Jekyll
       def set_relatives(json_nodes, json_links)
         # TODO: json nodes have relative_url, but node.id's/urls are doc urls.
         json_nodes.each do |json_node|
+          # set relatives
+
           ancestor_node_ids, descendent_node_ids = @site.tree.get_all_relative_ids(json_node[:id])
           relative_node_ids = ancestor_node_ids.concat(descendent_node_ids)
           json_node[:relatives][:nodes] = relative_node_ids if !relative_node_ids.nil?
@@ -152,6 +154,10 @@ module Jekyll
 
           json_relative_links = json_links.select { |l| lineage_ids.include?(l[:source]) && lineage_ids.include?(l[:target]) }
           json_node[:relatives][:links] = json_relative_links if !json_relative_links.nil?
+
+          # set siblings
+
+          json_node[:siblings] = @site.tree.get_sibling_ids(json_node[:id])
         end
       end
 
@@ -235,7 +241,7 @@ module Jekyll
         return net_web_nodes, net_web_links
       end
 
-      def generate_json_tree(node, json_parent="", tree_nodes=[], tree_links=[])
+      def generate_json_tree(node, json_parent="", tree_nodes=[], tree_links=[], level=0)
         #
         # missing nodes
         #
@@ -248,18 +254,22 @@ module Jekyll
             label: leaf.gsub('-', ' '),
             namespace: node.namespace,
             url: "",
+            level: level,
             relatives: {
               nodes: [],
               links: [],
             },
+            siblings: [],
           }
-          tree_nodes << missing_node
+          # non-root handling
           if !json_parent.empty?
+            missing_node[:parent] = json_parent[:id]
             tree_links << {
               source: json_parent[:id],
               target: node.namespace,
             }
           end
+          tree_nodes << missing_node
           json_parent = missing_node
         #
         # existing nodes
@@ -270,22 +280,26 @@ module Jekyll
             label: node.title,
             namespace: node.namespace,
             url: relative_url(node.url),
+            level: level,
             relatives: {
               nodes: [],
               links: [],
             },
+            siblings: [],
           }
-          tree_nodes << existing_node
+          # non-root handling
           if !json_parent.empty?
+            existing_node[:parent] = json_parent[:id]
             tree_links << {
               source: json_parent[:id],
               target: node.url,
             }
           end
+          tree_nodes << existing_node
           json_parent = existing_node
         end
         node.children.each do |child|
-          self.generate_json_tree(child, json_parent, tree_nodes, tree_links)
+          self.generate_json_tree(child, json_parent, tree_nodes, tree_links, (level + 1))
         end
         return tree_nodes, tree_links
       end
