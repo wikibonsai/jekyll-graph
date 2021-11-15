@@ -53,12 +53,13 @@ RSpec.describe(Jekyll::Graph::Generator) do
 
       context "dependencies" do
 
-        context "require site object has 'tree' attribute (because jekyll-namespaces was not enabled/installed)" do
+        context "if 'tree' is enabled, but 'jekyll-namespaces' not enabled (or installed)" do
           let(:config_overrides) { { "namespaces" => { "enabled" => false } } }
+          pending("todo: this is hard to test because i need to somehow mock the lack of plugin installation")
 
-          it "throw error if jekyll-namespaces' 'tree' is missing" do
-            expect { Jekyll.logger.error }.to raise_error(ArgumentError)
-          end
+          # it "throw error if jekyll-namespaces' 'tree' is missing" do
+          #   expect { Jekyll.logger.error }.to raise_error(ArgumentError)
+          # end
 
         end
 
