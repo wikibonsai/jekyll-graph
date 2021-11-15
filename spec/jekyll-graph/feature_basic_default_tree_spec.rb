@@ -31,7 +31,6 @@ RSpec.describe(Jekyll::Graph::Generator) do
 
   let(:graph_data)                      { static_graph_file_content("tree") }
   let(:graph_generated_fpath)           { find_generated_file("/assets/graph-tree.json") }
-  let(:graph_static_file)               { find_static_file("/assets/graph-tree.json") }
   let(:graph_root)                      { get_graph_root() }
   let(:graph_link)                      { get_graph_link_match_source("tree") }
   let(:graph_node)                      { get_graph_node("tree") }
