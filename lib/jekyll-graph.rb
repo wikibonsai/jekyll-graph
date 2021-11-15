@@ -33,11 +33,11 @@ module Jekyll
         # check what's enabled
         return if $graph_conf.disabled?
         if !$graph_conf.disabled_net_web? && !site.respond_to?(:link_index)
-          Jekyll.logger.error("In Jekyll-Graph: To generate the net-web graph, please either add and enable the 'jekyll-wikilinks' plugin or disable the net-web in the jekyll-graph config")
+          Jekyll.logger.error("Jekyll-Graph: To generate the net-web graph, please either add and enable the 'jekyll-wikilinks' plugin or disable the net-web in the jekyll-graph config")
           return
         end
         if !$graph_conf.disabled_tree? && !site.respond_to?(:tree)
-          Jekyll.logger.error("In Jekyll-Graph: To generate the tree graph, please either add and enable the 'jekyll-namespaces' plugin  or disable the tree in the jekyll-graph config")
+          Jekyll.logger.error("Jekyll-Graph: To generate the tree graph, please either add and enable the 'jekyll-namespaces' plugin  or disable the tree in the jekyll-graph config")
           return
         end
 
@@ -51,7 +51,7 @@ module Jekyll
         docs += @site.docs_to_write.filter { |d| !$graph_conf.excluded?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
         if @md_docs.empty?
-          Jekyll.logger.warn("In Jekyll-Graph: No documents to process.")
+          Jekyll.logger.warn("Jekyll-Graph: No documents to process.")
         end
 
         # write graph
@@ -167,13 +167,13 @@ module Jekyll
         @md_docs.each do |doc|
           if !$graph_conf.excluded?(doc.type)
 
-            Jekyll.logger.debug("In Jekyll-Graph: Processing graph nodes for doc: ", doc.data['title'])
+            Jekyll.logger.debug("Jekyll-Graph: Processing graph nodes for doc: ", doc.data['title'])
             #
             # missing nodes
             #
             @site.link_index.index[doc.url].missing.each do |missing_link_name|
               if net_web_nodes.none? { |node| node[:id] == missing_link_name }
-                Jekyll.logger.warn("In Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{doc.data['title']}")
+                Jekyll.logger.warn("Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{doc.data['title']}")
                 net_web_nodes << {
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
@@ -243,7 +243,7 @@ module Jekyll
         # missing nodes
         #
         if node.missing
-          Jekyll.logger.warn("In Jekyll-Graph: Document for tree node missing: ", node.namespace)
+          Jekyll.logger.warn("Jekyll-Graph: Document for tree node missing: ", node.namespace)
 
           leaf = node.namespace.split('.').pop()
           missing_node = {
