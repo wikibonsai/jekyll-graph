@@ -30,13 +30,14 @@ module Jekyll
       CONVERTER_CLASS = Jekyll::Converters::Markdown
 
       def generate(site)
+        # check what's enabled
         return if $graph_conf.disabled?
         if !$graph_conf.disabled_net_web? && !site.respond_to?(:link_index)
-          Jekyll.logger.error("To generate the net-web graph, please either add and enable the 'jekyll-wikilinks' plugin or disable the net-web in the jekyll-graph config")
+          Jekyll.logger.error("In Jekyll-Graph: To generate the net-web graph, please either add and enable the 'jekyll-wikilinks' plugin or disable the net-web in the jekyll-graph config")
           return
         end
         if !$graph_conf.disabled_tree? && !site.respond_to?(:tree)
-          Jekyll.logger.error("To generate the tree graph, please either add and enable the 'jekyll-namespaces' plugin  or disable the tree in the jekyll-graph config")
+          Jekyll.logger.error("In Jekyll-Graph: To generate the tree graph, please either add and enable the 'jekyll-namespaces' plugin  or disable the tree in the jekyll-graph config")
           return
         end
 
@@ -50,7 +51,7 @@ module Jekyll
         docs += @site.docs_to_write.filter { |d| !$graph_conf.excluded?(d.type) }
         @md_docs = docs.filter { |doc| markdown_extension?(doc.extname) }
         if @md_docs.empty?
-          Jekyll.logger.debug("No documents to process.")
+          Jekyll.logger.warn("In Jekyll-Graph: No documents to process.")
         end
 
         # write graph
@@ -64,7 +65,6 @@ module Jekyll
           )
           # create json file
           json_net_web_graph_file = self.new_page($graph_conf.path_assets, "graph-net-web.json", net_web_graph_content)
-          self.register_static_file(json_net_web_graph_file)
         end
         if !$graph_conf.disabled_tree?
           # generate json data
@@ -76,13 +76,12 @@ module Jekyll
           )
           # create json file
           json_tree_graph_file = self.new_page($graph_conf.path_assets, "graph-tree.json", tree_graph_content)
-          self.register_static_file(json_tree_graph_file)
         end
         # add graph drawing scripts
         script_filename = "jekyll-graph.js"
         graph_script_content = File.read(source_path(script_filename))
+        # create js file
         static_file = self.new_page($graph_conf.path_scripts, script_filename, graph_script_content)
-        self.register_static_file(static_file)
       end
 
       # helpers
@@ -116,13 +115,12 @@ module Jekyll
         return new_file
       end
 
-      def register_static_file(static_file)
-        # tests fail without manually adding the static file, but actual site builds seem to do ok
-        # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
-        if $graph_conf.testing
-          @site.static_files << static_file if !@site.static_files.include?(static_file)
-        end
-      end
+      # keeping this around in case it's needed again
+      # # tests fail without manually adding the static file, but actual site builds seem to do ok
+      # # ...although there does seem to be a race condition which causes a rebuild to be necessary in order to detect the graph data file
+      # def register_static_file(static_file)
+      #   @site.static_files << static_file if !@site.static_files.include?(static_file)
+      # end
 
       # json population helpers
       #  set ids here, full javascript objects are populated in client-side javascript.
@@ -169,14 +167,13 @@ module Jekyll
         @md_docs.each do |doc|
           if !$graph_conf.excluded?(doc.type)
 
-            Jekyll.logger.debug "Processing graph nodes for doc: ", doc.data['title']
+            Jekyll.logger.debug("In Jekyll-Graph: Processing graph nodes for doc: ", doc.data['title'])
             #
             # missing nodes
             #
             @site.link_index.index[doc.url].missing.each do |missing_link_name|
               if net_web_nodes.none? { |node| node[:id] == missing_link_name }
-                Jekyll.logger.warn "Net-Web node missing: ", missing_link_name
-                Jekyll.logger.warn " in: ", doc.data['title']
+                Jekyll.logger.warn("In Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{doc.data['title']}")
                 net_web_nodes << {
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
@@ -246,7 +243,7 @@ module Jekyll
         # missing nodes
         #
         if node.missing
-          Jekyll.logger.warn("Document for tree node missing: ", node.namespace)
+          Jekyll.logger.warn("In Jekyll-Graph: Document for tree node missing: ", node.namespace)
 
           leaf = node.namespace.split('.').pop()
           missing_node = {
