@@ -173,7 +173,7 @@ module Jekyll
             #
             @site.link_index.index[doc.url].missing.each do |missing_link_name|
               if net_web_nodes.none? { |node| node[:id] == missing_link_name }
-                Jekyll.logger.debug("Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{doc.data['title']}")
+                Jekyll.logger.warn("Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{doc.data['title']}")
                 net_web_nodes << {
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
@@ -243,7 +243,7 @@ module Jekyll
         # missing nodes
         #
         if node.missing
-          Jekyll.logger.debug("Jekyll-Graph: Document for tree node missing: ", node.namespace)
+          Jekyll.logger.warn("Jekyll-Graph: Document for tree node missing: ", node.namespace)
 
           leaf = node.namespace.split('.').pop()
           missing_node = {
