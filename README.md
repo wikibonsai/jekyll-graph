@@ -55,13 +55,14 @@ Unless otherwise defined, the `jekyll-graph.js` file will be generated into `_si
 
 Default configs look like this:
 
-```yml
+```yaml
 graph:
   enabled: true
   exclude: []
   path:
     assets: "/assets"
     scripts: "/assets/js"
+  net_web:
     enabled: true
     force:
       charge:
@@ -69,7 +70,7 @@ graph:
       x_val:
       strength_y:
       y_val:
-  net_web:
+  tree:
     enabled: true
     force:
       charge:
@@ -87,7 +88,7 @@ graph:
 
 `path.scripts`: An optional custom scripts location for the graph scripts to generate into. Location is relative to the assets location in the `_site/` directory (If `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
 
-`tree.enabled` and `net_web.enabled`: Toggles on/off the `tree` and `net_web` graphs, respectively.
+`tree.enabled` and `net_web.enabled`: Toggles on/off the `tree` and `net_web` graphs, respectively. Be sure to disable graphs that are not in use.
 
 `tree.force` and `net_web.force`: These are force variables from d3's simulation forces. You can check out the [docs for details](https://github.com/d3/d3-force#simulation_force).
 
@@ -96,7 +97,6 @@ Force values will likely need to be played with depending on the div size and nu
 ```yaml
 graph:
   tree:
-    # enabled: true
     dag_lvl_dist: 100
     force:
       charge: -100
@@ -105,7 +105,6 @@ graph:
       strength_y: 0.1
       y_val: 0.9
   net_web:
-    # enabled: true
     force:
       charge: -300
       strength_x: 0.3
@@ -136,13 +135,13 @@ Graph colors are determined by css variables which may be defined like so -- any
   --graph-particles-color: grey;
   /* label text */
   --graph-text-color: black;
-  /*  */
 ```
 
 ## Data
 Graph data is generated in the following format:
 
 For the net-web graph, `graph-net-web.json`,`links` are built from `backlinks` and `attributed` metadata generated in `jekyll-wikilinks`:
+
 ```json
 // graph-net-web.json
 {
@@ -152,8 +151,8 @@ For the net-web graph, `graph-net-web.json`,`links` are built from `backlinks` a
       "url": "<relative-url>", // site.baseurl is handled for you here
       "label": "<note's-title>",
       "neighbors": {
-          "nodes": [<neighbor-node>, ...],
-          "links": [<neighbor-link>, ...],
+          "nodes": [<neighbor-node-id>, ...],
+          "links": [<neighbor-link-id>, ...],
       }
     },
     ...
@@ -167,7 +166,9 @@ For the net-web graph, `graph-net-web.json`,`links` are built from `backlinks` a
   ]
 }
 ```
+
 For the tree graph, `graph-tree.json`, `links` are built from a tree data structure constructed in `jekyll-namespaces`:
+
 ```json
 // graph-tree.json
 {
@@ -177,8 +178,8 @@ For the tree graph, `graph-tree.json`, `links` are built from a tree data struct
       "url": "<relative-url>", // site.baseurl wil be handled for you here
       "label": "<note's-title>",
       "relatives": {
-          "nodes": [<relative-node>, ...],
-          "links": [<relative-link>, ...],
+          "nodes": [<relative-node-id>, ...],
+          "links": [<relative-link-id>, ...],
       }
     },
     ...
@@ -192,4 +193,5 @@ For the tree graph, `graph-tree.json`, `links` are built from a tree data struct
   ]
 }
 ```
+
 Unless otherwise defined, both json files are generated into `_site/assets/`.
