@@ -6,7 +6,10 @@ RSpec.describe(Jekyll::Graph::Generator) do
   let(:config) do
     Jekyll.configuration(
       config_overrides.merge(
-        "collections"          => { "docs_net_web" => { "output" => true }, "docs_tree" => { "output" => true } },
+        "collections"          => { 
+          "docs_net_web" => { "output" => true }, 
+          "docs_tree"    => { "output" => true },
+        },
         "permalink"            => "pretty",
         "skip_config_files"    => false,
         "source"               => fixtures_dir,
@@ -18,7 +21,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
     )
   end
 
-  let(:config_overrides)                { { } }
+  # let(:config_overrides)                { { } }
   let(:site)                            { Jekyll::Site.new(config) }
 
   let(:net_web_graph_data)              { static_graph_file_content("net-web") }
@@ -75,24 +78,44 @@ RSpec.describe(Jekyll::Graph::Generator) do
 
     context "when assets location is set" do
       let(:config_overrides) { {
-                                "graph" => { "assets_path" => "/custom_assets_path" }
+                                "graph" => { 
+                                  "path" => {
+                                    "assets" => "/custom_assets_path"
+                                  }
+                                }
                              } }
-
-      after(:context) do
-        # cleanup generated assets from custom location
-        FileUtils.rm_rf(Dir["#{site_dir("/custom_assets_path")}"])
-      end
 
       it "writes graph file to custom location" do
         # net-web
-        expect(find_generated_file("/custom_assets_path/graph-net-web.json")).to eq(File.join(site_dir, "/custom_assets_path/graph-net-web.json"))
+        expect(file_generated?("/custom_assets_path/graph-net-web.json")).to eq(true)
         # tree
-        expect(find_generated_file("/custom_assets_path/graph-tree.json")).to eq(File.join(site_dir, "/custom_assets_path/graph-tree.json"))
+        expect(file_generated?("/custom_assets_path/graph-tree.json")).to eq(true)
         # scripts
-        expect(find_generated_file("/custom_assets_path/js/jekyll-graph.js")).to eq(File.join(site_dir, "/custom_assets_path/js/jekyll-graph.js"))
+        expect(file_generated?("/custom_assets_path/js/jekyll-graph.js")).to eq(true)
       end
 
     end
+
+    context "when scripts location is set" do
+      let(:config_overrides) { {
+                                "graph" => { 
+                                  "path" => { 
+                                    "scripts" => "/custom_scripts_path" 
+                                  }
+                                }
+                             } }
+
+      it "writes graph file to custom location" do
+        # net-web
+        expect(file_generated?("/assets/graph-net-web.json")).to eq(true)
+        # tree
+        expect(file_generated?("/assets/graph-tree.json")).to eq(true)
+        # scripts
+        expect(file_generated?("/assets/custom_scripts_path/jekyll-graph.js")).to eq(true)
+      end
+
+    end
+
 
   end
 

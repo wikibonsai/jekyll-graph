@@ -38,6 +38,10 @@ RSpec.configure do |config|
     site_dir(relative_path)
   end
 
+  def file_generated?(relative_path)
+    File.file?(site_dir(relative_path))
+  end
+
   def find_static_file(relative_path)
     site.static_files.find { |sf| sf.relative_path == relative_path }
   end

@@ -59,9 +59,9 @@ Default configs look like this:
 graph:
   enabled: true
   exclude: []
-  assets_path: "/assets"
-  scripts_path: "/assets/js"
-  tree:
+  path:
+    assets: "/assets"
+    scripts: "/assets/js"
     enabled: true
     force:
       charge:
@@ -83,9 +83,9 @@ graph:
 
 `exclude`: Exclude specific jekyll document types (`posts`, `pages`, `collection_items`).
 
-`assets_path`: Custom graph file location from the root of the generated `_site/` directory.
+`path.assets`: An optional custom assets location for graph assets to generate into. Location is relative to the root of the generated `_site/` directory.
 
-`scripts_path`: Custom graph scripts location from the assets location of the generated `_site/` directory (If `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
+`path.scripts`: An optional custom scripts location for the graph scripts to generate into. Location is relative to the assets location in the `_site/` directory (If `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
 
 `tree.enabled` and `net_web.enabled`: Toggles on/off the `tree` and `net_web` graphs, respectively.
 

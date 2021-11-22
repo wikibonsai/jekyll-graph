@@ -5,12 +5,14 @@ module Jekyll
   module Graph
 
     class PluginConfig
+
+      ASSETS_KEY = "assets"
       CONFIG_KEY = "graph"
       ENABLED_KEY = "enabled"
       EXCLUDE_KEY = "exclude"
       NET_WEB_KEY = "net_web"
-      PATH_ASSETS_KEY = "assets_path"
-      PATH_SCRIPTS_KEY = "scripts_path"
+      PATH_KEY = "path"
+      SCRIPTS_KEY = "scripts"
       TREE_KEY = "tree"
       TYPE_KEY = "type"
 
@@ -39,16 +41,20 @@ module Jekyll
         return option(EXCLUDE_KEY).include?(type.to_s)
       end
 
-      def has_custom_write_path?
-        return !!option(PATH_ASSETS_KEY)
+      def has_custom_assets_path?
+        return option_path(ASSETS_KEY)
       end
 
       def has_custom_scripts_path?
-        return !!option(PATH_SCRIPTS_KEY)
+        return option_path(SCRIPTS_KEY)
       end
 
       def option(key)
         @config[CONFIG_KEY] && @config[CONFIG_KEY][key]
+      end
+
+      def option_path(key)
+        @config[CONFIG_KEY] && @config[CONFIG_KEY][PATH_KEY] && @config[CONFIG_KEY][PATH_KEY][key]
       end
 
       def option_net_web(key)
@@ -66,11 +72,11 @@ module Jekyll
       end
 
       def path_assets
-        return has_custom_write_path? ? option(PATH_ASSETS_KEY) : "/assets"
+        return has_custom_assets_path? ? option_path(ASSETS_KEY) : "/assets"
       end
 
       def path_scripts
-        return has_custom_scripts_path? ? option(PATH_SCRIPTS_KEY) : File.join(path_assets, "js")
+        return has_custom_scripts_path? ? File.join(path_assets, option_path(SCRIPTS_KEY)) : File.join(path_assets, "js")
       end
 
       def testing
