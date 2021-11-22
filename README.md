@@ -49,7 +49,7 @@ export default class JekyllGraphSubClass extends JekyllGraph {
 ```
 Call `this.drawNetWeb()` and `this.drawTree()` to actually draw the graph. You could do this simply on initialization or on a button click, etc.
 
-Unless otherwise defined, the `jekyll-graph.js` file will be generated into `_site/assets/scripts/`.
+Unless otherwise defined, the `jekyll-graph.js` file will be generated into `_site/assets/js/`.
 
 ## Configuration
 
