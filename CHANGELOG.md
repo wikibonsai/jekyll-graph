@@ -1,3 +1,12 @@
+## [0.0.3] 2021-11-22
+### Change
+- Fix javascript inheritance.
+- Decrement missing node log messages from 'warn' to 'debug'.
+- Update license.
+### Fix
+- Display log messages related to dependencies (see [#2](https://github.com/manunamz/jekyll-graph/issues/2)).
+- Custom path configs.
+
 ## [0.0.2] - 2021-09-17
 ### Change
 - Liquid tag `force-graph` -> `jekyll_graph`.  
