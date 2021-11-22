@@ -203,10 +203,27 @@ module Jekyll
               },
             }
             # TODO: this link calculation ends up with duplicates -- re-visit this later.
-            @site.link_index.index[doc.url].attributes.each do |link| # link = { 'type' => str, 'urls' => [str, str, ...] }
-              # TODO: Header + Block-level wikilinks
-              link['urls'].each do |lu|
-                link_no_anchor = lu.match(/([^#]+)/i)[0]
+            if $graph_conf.use_attrs?
+              @site.link_index.index[doc.url].attributes.each do |link| # link = { 'type' => str, 'urls' => [str, str, ...] }
+                # TODO: Header + Block-level wikilinks
+                link['urls'].each do |lu|
+                  link_no_anchor = lu.match(/([^#]+)/i)[0]
+                  link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
+                  linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
+                  if !linked_doc.nil? && linked_doc.size == 1 && !$graph_conf.excluded?(linked_doc.first.type)
+                    # TODO: add link['type'] to d3 graph
+                    net_web_links << {
+                      source: doc.url,
+                      target: linked_doc.first.url,
+                    }
+                  end
+                end
+              end
+            end
+            if $graph_conf.use_links?
+              @site.link_index.index[doc.url].forelinks.each do |link| # link = { 'type' => str, 'url' => str }
+                # TODO: Header + Block-level wikilinks
+                link_no_anchor = link['url'].match(/([^#]+)/i)[0]
                 link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
                 linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
                 if !linked_doc.nil? && linked_doc.size == 1 && !$graph_conf.excluded?(linked_doc.first.type)
@@ -216,19 +233,6 @@ module Jekyll
                     target: linked_doc.first.url,
                   }
                 end
-              end
-            end
-            @site.link_index.index[doc.url].forelinks.each do |link| # link = { 'type' => str, 'url' => str }
-              # TODO: Header + Block-level wikilinks
-              link_no_anchor = link['url'].match(/([^#]+)/i)[0]
-              link_no_baseurl = @site.baseurl.nil? ? link_no_anchor : link_no_anchor.gsub(@site.baseurl, "")
-              linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
-              if !linked_doc.nil? && linked_doc.size == 1 && !$graph_conf.excluded?(linked_doc.first.type)
-                # TODO: add link['type'] to d3 graph
-                net_web_links << {
-                  source: doc.url,
-                  target: linked_doc.first.url,
-                }
               end
             end
 

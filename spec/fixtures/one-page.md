@@ -2,4 +2,4 @@
 title: One Page
 ---
 
-This page links to a [[base-case.a]].
+This page links to a [[blank.a]].

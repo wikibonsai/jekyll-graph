@@ -7,9 +7,11 @@ module Jekyll
     class PluginConfig
 
       ASSETS_KEY = "assets"
+      ATTRS_KEY = "attrs"
       CONFIG_KEY = "graph"
       ENABLED_KEY = "enabled"
       EXCLUDE_KEY = "exclude"
+      LINKS_KEY = "links"
       NET_WEB_KEY = "net_web"
       PATH_KEY = "path"
       SCRIPTS_KEY = "scripts"
@@ -22,7 +24,7 @@ module Jekyll
         Jekyll.logger.debug("Excluded jekyll types in graph: ", option(EXCLUDE_KEY)) unless disabled?
       end
 
-      # options
+      # descriptors
 
       def disabled?
         return option(ENABLED_KEY) == false
@@ -49,6 +51,18 @@ module Jekyll
         return option_path(SCRIPTS_KEY)
       end
 
+      def use_attrs?
+        return true if option_net_web_exclude(ATTRS_KEY).nil?
+        return !option_net_web_exclude(ATTRS_KEY)
+      end
+
+      def use_links?
+        return true if option_net_web_exclude(LINKS_KEY).nil?
+        return !option_net_web_exclude(LINKS_KEY)
+      end
+
+      # options
+
       def option(key)
         @config[CONFIG_KEY] && @config[CONFIG_KEY][key]
       end
@@ -59,6 +73,10 @@ module Jekyll
 
       def option_net_web(key)
         @config[CONFIG_KEY] && @config[CONFIG_KEY][NET_WEB_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][key]
+      end
+
+      def option_net_web_exclude(key)
+        @config[CONFIG_KEY] && @config[CONFIG_KEY][NET_WEB_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][EXCLUDE_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][EXCLUDE_KEY][key]
       end
 
       def option_tree(key)

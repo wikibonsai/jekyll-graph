@@ -27,6 +27,10 @@ RSpec.describe(Jekyll::Graph::Generator) do
   let(:net_web_graph_data)              { static_graph_file_content("net-web") }
   let(:tree_web_graph_data)             { static_graph_file_content("tree") }
 
+  let(:block_link_doc)                  { find_by_title(site.collections["docs_net_web"].docs, "Block Single Link") }
+  let(:untyped_link_doc)                { find_by_title(site.collections["docs_net_web"].docs, "Untyped Link") }
+  let(:blank_a)                         { find_by_title(site.collections["docs_net_web"].docs, "Base Case A") }
+
   # makes markdown tests work
   subject { described_class.new(site.config) }
 
@@ -116,6 +120,49 @@ RSpec.describe(Jekyll::Graph::Generator) do
 
     end
 
+    context "NET-WEB 'exclude'" do
+
+      context "when 'attrs' not included" do
+        let(:config_overrides) { {
+                                  "graph" => { 
+                                    "net_web" => {
+                                      "exclude" => {
+                                        "attrs" => false
+                                      }
+                                    }
+                                  }
+                              } }
+
+        it "does not include 'attributes'/'attributed' nodes/links" do
+          expect(net_web_graph_data["links"].find { |l| l["source"] == "/docs_net_web/link.block/" && l["target"] == "/docs_net_web/blank.a/" }).to eq(
+            "source" => "/docs_net_web/link.block/",
+            "target" => "/docs_net_web/blank.a/",
+          )
+        end
+
+      end
+
+      context "when 'links' not included" do
+        let(:config_overrides) { {
+                                  "graph" => { 
+                                    "net_web" => {
+                                      "exclude" => {
+                                        "links" => false
+                                      }
+                                    }
+                                  }
+                              } }
+
+        it "does not include 'forelink'/'backlink' nodes/links" do
+          expect(net_web_graph_data["links"].find { |l| l["source"] == "/docs_net_web/link/" && l["target"] == "/docs_net_web/blank.a/" }).to eq(
+            "source" => "/docs_net_web/link/",
+            "target" => "/docs_net_web/blank.a/",
+          )
+        end
+
+      end
+
+    end
 
   end
 

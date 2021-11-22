@@ -64,6 +64,9 @@ graph:
     scripts: "/assets/js"
   net_web:
     enabled: true
+    exclude:
+      attrs: false
+      links: false
     force:
       charge:
       strength_x:
@@ -87,6 +90,8 @@ graph:
 `path.assets`: An optional custom assets location for graph assets to generate into. Location is relative to the root of the generated `_site/` directory.
 
 `path.scripts`: An optional custom scripts location for the graph scripts to generate into. Location is relative to the assets location in the `_site/` directory (If `assets_path` is set, but `scripts_path` is not, the location will default to `_site/<assets_path>/js/`).
+
+`net_web.exclude.attrs` and `net_web.exclude.links`: Determines whether wikilink attributes and/or links are added to the net-web graph from the link index.
 
 `tree.enabled` and `net_web.enabled`: Toggles on/off the `tree` and `net_web` graphs, respectively. Be sure to disable graphs that are not in use.
 
