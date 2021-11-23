@@ -180,11 +180,11 @@ For the tree graph, `graph-tree.json`, `links` are built from a tree data struct
   "nodes": [
     {
       "id": "<some-id>",
-      "url": "<relative-url>", // site.baseurl wil be handled for you here
+      "url": "<lineage-url>", // site.baseurl wil be handled for you here
       "label": "<note's-title>",
-      "relatives": {
-          "nodes": [<relative-node-id>, ...],
-          "links": [<relative-link-id>, ...],
+      "lineage": {
+          "nodes": [<lineage-node-id>, ...],
+          "links": [<lineage-link-id>, ...],
       }
     },
     ...

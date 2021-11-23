@@ -69,7 +69,7 @@ module Jekyll
         if !$graph_conf.disabled_tree?
           # generate json data
           json_tree_nodes, json_tree_links = self.generate_json_tree(@site.tree.root)
-          self.set_relatives(json_tree_nodes, json_tree_links)
+          self.set_lineage(json_tree_nodes, json_tree_links)
           tree_graph_content = JSON.dump(
             nodes: json_tree_nodes,
             links: json_tree_links,
@@ -138,20 +138,20 @@ module Jekyll
         end
       end
 
-      def set_relatives(json_nodes, json_links)
+      def set_lineage(json_nodes, json_links)
         # TODO: json nodes have relative_url, but node.id's/urls are doc urls.
         json_nodes.each do |json_node|
-          # set relatives
+          # set lineage
 
-          ancestor_node_ids, descendent_node_ids = @site.tree.get_all_relative_ids(json_node[:id])
-          relative_node_ids = ancestor_node_ids.concat(descendent_node_ids)
-          json_node[:relatives][:nodes] = relative_node_ids if !relative_node_ids.nil?
+          ancestor_node_ids, descendent_node_ids = @site.tree.get_all_lineage_ids(json_node[:id])
+          lineage_node_ids = ancestor_node_ids.concat(descendent_node_ids)
+          json_node[:lineage][:nodes] = lineage_node_ids if !lineage_node_ids.nil?
 
           # include current node when filtering for links along entire relative lineage
-          lineage_ids = relative_node_ids.concat([json_node[:id]])
+          lineage_ids = lineage_node_ids.concat([json_node[:id]])
 
-          json_relative_links = json_links.select { |l| lineage_ids.include?(l[:source]) && lineage_ids.include?(l[:target]) }
-          json_node[:relatives][:links] = json_relative_links if !json_relative_links.nil?
+          json_lineage_links = json_links.select { |l| lineage_ids.include?(l[:source]) && lineage_ids.include?(l[:target]) }
+          json_node[:lineage][:links] = json_lineage_links if !json_lineage_links.nil?
 
           # set siblings
 
@@ -256,7 +256,7 @@ module Jekyll
             namespace: node.namespace,
             url: "",
             level: level,
-            relatives: {
+            lineage: {
               nodes: [],
               links: [],
             },
@@ -282,7 +282,7 @@ module Jekyll
             namespace: node.namespace,
             url: relative_url(node.url),
             level: level,
-            relatives: {
+            lineage: {
               nodes: [],
               links: [],
             },

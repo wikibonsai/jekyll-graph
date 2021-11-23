@@ -100,15 +100,15 @@ RSpec.describe(Jekyll::Graph::Generator) do
           expect(graph_root["url"]).to eq(doc_root.url)
         end
 
-        it "'relatives' is an object with keys 'nodes' and 'links'" do
-          expect(graph_root["relatives"]).to be_a(Object)
-          expect(graph_root["relatives"].keys).to eq(["nodes", "links"])
+        it "'lineage' is an object with keys 'nodes' and 'links'" do
+          expect(graph_root["lineage"]).to be_a(Object)
+          expect(graph_root["lineage"].keys).to eq(["nodes", "links"])
         end
 
-        it "'relatives' 'node' is an array of 'id's" do
-          expect(graph_root["relatives"]["nodes"]).to be_a(Array)
-          expect(graph_root["relatives"]["nodes"][0]).to be_a(String)
-          expect(graph_root["relatives"]["nodes"]).to eq([
+        it "'lineage' 'node' is an array of 'id's" do
+          expect(graph_root["lineage"]["nodes"]).to be_a(Array)
+          expect(graph_root["lineage"]["nodes"][0]).to be_a(String)
+          expect(graph_root["lineage"]["nodes"]).to eq([
             "/one-page/",
             "/2020/12/08/one-post/",
             "root.blank",
@@ -119,10 +119,10 @@ RSpec.describe(Jekyll::Graph::Generator) do
           ])
         end
 
-        it "'relatives' 'link' is an array of objects with 'source' and 'target' keys which are node ids" do
-          expect(graph_root["relatives"]["links"]).to be_a(Array)
-          expect(graph_root["relatives"]["links"][0].keys).to eq(["source", "target"])
-          expect(graph_root["relatives"]["links"]).to eq([
+        it "'lineage' 'link' is an array of objects with 'source' and 'target' keys which are node ids" do
+          expect(graph_root["lineage"]["links"]).to be_a(Array)
+          expect(graph_root["lineage"]["links"][0].keys).to eq(["source", "target"])
+          expect(graph_root["lineage"]["links"]).to eq([
             {"source"=>"/docs_tree/root/", "target"=>"/one-page/"},
             {"source"=>"/docs_tree/root/", "target"=>"/2020/12/08/one-post/"},
             {"source"=>"/docs_tree/root/", "target"=>"root.blank"},
