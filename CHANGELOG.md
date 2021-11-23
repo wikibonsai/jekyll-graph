@@ -1,3 +1,7 @@
+## [0.0.5] - 2021-11-23
+### Change
+- 'relatives' -> 'lineage' for tree nodes.
+
 ## [0.0.4] 2021-11-22
 ### Fix
 - Custom path config related fix in scripts.
