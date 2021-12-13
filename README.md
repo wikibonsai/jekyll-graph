@@ -6,7 +6,7 @@
 
 Jekyll-Graph generates data and renders a graph that allows visitors to navigate a jekyll site by clicking nodes in the graph. Nodes are generated from the site's markdown files. Links for the tree graph are generated from [`jekyll-namespaces`](https://github.com/manunamz/jekyll-namespaces) and links for the net-web graph from [`jekyll-wikilinks`](https://github.com/manunamz/jekyll-wikilinks).
 
-This gem is part of the [jekyll-bonsai](https://manunamz.github.io/jekyll-bonsai/) project. 🎋
+This gem is part of the [jekyll-bonsai](https://jekyll-bonsai.netlify.app/) project. 🎋
 
 ## Installation
 
