@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 require "jekyll"
 
-require_relative "jekyll-graph/context"
-require_relative "jekyll-graph/page"
+require_relative "jekyll-graph/patch/context"
+require_relative "jekyll-graph/patch/page"
 require_relative "jekyll-graph/version"
 
 # setup config
