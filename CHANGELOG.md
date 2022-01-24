@@ -1,12 +1,16 @@
+## [0.0.6] - 2022-01-24
+### Change
+- Move jekyll patch files to patch/ dir.
+- Bump jekyll-wikilinks version number (0.0.10).
 ## [0.0.5] - 2021-11-23
 ### Change
 - 'relatives' -> 'lineage' for tree nodes.
 
-## [0.0.4] 2021-11-22
+## [0.0.4] - 2021-11-22
 ### Fix
 - Custom path config related fix in scripts.
 
-## [0.0.3] 2021-11-22
+## [0.0.3] - 2021-11-22
 ### Change
 - Fix javascript inheritance.
 - Decrement missing node log messages from 'warn' to 'debug'.
