@@ -1,3 +1,4 @@
+## [0.0.7]
 ## [0.0.6] - 2022-01-24
 ### Change
 - Move jekyll patch files to patch/ dir.
