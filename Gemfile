@@ -7,7 +7,7 @@ gemspec
 
 gem "jekyll", "~> 4.2.0"
 gem "jekyll-namespaces", "~> 0.0.3"
-gem "jekyll-wikilinks", "~> 0.0.10"
+gem "jekyll-wikilinks", "~> 0.0.11"
 
 gem "rake", "~> 13.0.3"
 gem "rspec", "~> 3.10"
