@@ -1,3 +1,8 @@
+## [0.0.8] - 2022-03-03
+### Change
+- Update javascript setup instructions in README.
+### Fix
+- Check 'visited' localstorage variable is not null.
 ## [0.0.7] - 2022-01-27
 ### Change
 - Bump jekyll-wikilinks version number (0.0.11).
