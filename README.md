@@ -1,5 +1,8 @@
 # Jekyll-Graph
 
+[![A WikiBonsai Project](https://img.shields.io/badge/%F0%9F%8E%8B-A%20WikiBonsai%20Project-brightgreen)](https://github.com/wikibonsai/wikibonsai)
+[![Ruby Gem](https://img.shields.io/gem/v/jekyll-graph)](https://rubygems.org/gems/jekyll-graph)
+
 ⚠️ This is gem is under active development! ⚠️
 
 ⚠️ Expect breaking changes and surprises until otherwise noted (likely by v0.1.0 or v1.0.0). ⚠️
