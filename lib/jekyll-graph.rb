@@ -37,7 +37,7 @@ module Jekyll
           return
         end
         if !$graph_conf.disabled_tree? && !site.respond_to?(:tree)
-          Jekyll.logger.error("Jekyll-Graph: To generate the tree graph, please either add and enable the 'jekyll-namespaces' plugin  or disable the tree in the jekyll-graph config")
+          Jekyll.logger.error("Jekyll-Graph: To generate the tree graph, please either add and enable the 'jekyll-semtree' or 'jekyll-namespaces' plugin, or disable the tree in the jekyll-graph config")
           return
         end
 
@@ -173,7 +173,7 @@ module Jekyll
             #
             @site.link_index.index[doc.url].missing.each do |missing_link_name|
               if net_web_nodes.none? { |node| node[:id] == missing_link_name }
-                Jekyll.logger.warn("Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{doc.data['title']}")
+                Jekyll.logger.warn("Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{File.basename(doc.basename, File.extname(doc.basename))}")
                 net_web_nodes << {
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
@@ -242,18 +242,24 @@ module Jekyll
         return net_web_nodes, net_web_links
       end
 
+      # used for both plugins:
+      # jekyll-semtree
+      # jekyll-namespace
       def generate_json_tree(node, json_parent="", tree_nodes=[], tree_links=[], level=0)
+        node = node.is_a?(String) ? @site.tree.nodes.detect { |n| n.text == node } : node
         #
         # missing nodes
         #
         if node.missing
-          Jekyll.logger.warn("Jekyll-Graph: Document for tree node missing: ", node.namespace)
+          missing_text = node.namespace ? node.namespace : node.text
+          Jekyll.logger.warn("Jekyll-Graph: Tree node missing: ", missing_text)
 
-          leaf = node.namespace.split('.').pop()
+          if node.namespace
+            leaf = node.namespace.split('.').pop()
+          end
           missing_node = {
-            id: node.namespace,
-            label: leaf.gsub('-', ' '),
-            namespace: node.namespace,
+            id: node.namespace ? node.namespace : node.text,
+            label: node.namespace ? leaf.gsub('-', ' ') : node.text,
             url: "",
             level: level,
             lineage: {
@@ -262,12 +268,15 @@ module Jekyll
             },
             siblings: [],
           }
+          if node.namespace
+            missing_node['namespace'] = node.namespace
+          end
           # non-root handling
           if !json_parent.empty?
             missing_node[:parent] = json_parent[:id]
             tree_links << {
               source: json_parent[:id],
-              target: node.namespace,
+              target: node.namespace ? node.namespace : node.text,
             }
           end
           tree_nodes << missing_node
@@ -279,7 +288,6 @@ module Jekyll
           existing_node = {
             id: node.url,
             label: node.title,
-            namespace: node.namespace,
             url: relative_url(node.url),
             level: level,
             lineage: {
@@ -288,6 +296,9 @@ module Jekyll
             },
             siblings: [],
           }
+          if node.namespace
+            existing_node['namespace'] = node.namespace
+          end
           # non-root handling
           if !json_parent.empty?
             existing_node[:parent] = json_parent[:id]
