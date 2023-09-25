@@ -144,6 +144,8 @@ No configurations are strictly necessary for plugin defaults to work.
 Graph colors are determined by css variables which may be defined like so -- any valid css color works (hex, rgba, etc.):
 
 ```CSS
+/* make sure color vars are attached to the root of the html document */
+html {
   /* nodes */
   /* glow */
   --graph-node-current-glow: yellow;
@@ -159,6 +161,7 @@ Graph colors are determined by css variables which may be defined like so -- any
   --graph-particles-color: grey;
   /* label text */
   --graph-text-color: black;
+}
 ```
 
 ## Data
