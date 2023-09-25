@@ -7,9 +7,9 @@
 
 ⚠️ Expect breaking changes and surprises until otherwise noted (likely by v0.1.0 or v1.0.0). ⚠️
 
-Jekyll-Graph generates data and renders a graph that allows visitors to navigate a jekyll site by clicking nodes in the graph. Nodes are generated from the site's markdown files. Links for the tree graph are generated from [`jekyll-namespaces`](https://github.com/manunamz/jekyll-namespaces) and links for the net-web graph from [`jekyll-wikilinks`](https://github.com/manunamz/jekyll-wikilinks).
+Jekyll-Graph generates data and renders a graph that allows visitors to navigate a jekyll site by clicking nodes in the graph. Nodes are generated from the site's markdown files. Links for the tree graph are generated from [`jekyll-semtree`](https://github.com/wikibonsai/jekyll-semtree) or [`jekyll-namespaces`](https://github.com/manunamz/jekyll-namespaces) and links for the net-web graph from [`jekyll-wikirefs`](https://github.com/wikibonsai/jekyll-wikirefs) [`jekyll-wikilinks`](https://github.com/manunamz/jekyll-wikilinks).
 
-This gem is part of the [jekyll-bonsai](https://jekyll-bonsai.netlify.app/) project. 🎋
+🏡 Build and maintain a treehouze to play in in your [WikiBonsai](https://github.com/wikibonsai/wikibonsai) digital garden.
 
 ## Installation
 
