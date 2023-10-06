@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
-# deprecated: 'net_web' -> 'web'
-
 require "spec_helper"
 
 RSpec.describe(Jekyll::Graph::Generator) do
   let(:config) do
     Jekyll.configuration(
       config_overrides.merge(
-        "collections"          => { "docs_net_web" => { "output" => true } },
+        "collections"          => { "docs_web" => { "output" => true } },
         "permalink"            => "pretty",
         "skip_config_files"    => false,
         "source"               => fixtures_dir,
@@ -20,24 +18,23 @@ RSpec.describe(Jekyll::Graph::Generator) do
       )
     )
   end
-                                        # set configs to only test the net-web graph
+                                        # set configs to only test the web graph
   let(:config_overrides)                { {
                                            "wikilinks" => { "exclude" => [ "docs_tree" ] },
                                            "graph" => { "tree" => { "enabled" => false } },
                                         } }
   let(:site)                            { Jekyll::Site.new(config) }
 
-  let(:untyped_link_doc)                { find_by_title(site.collections["docs_net_web"].docs, "Untyped Link") }
-  let(:blank_a)                         { find_by_title(site.collections["docs_net_web"].docs, "Base Case A") }
-  let(:missing_doc)                     { find_by_title(site.collections["docs_net_web"].docs, "Untyped Link Missing Doc") }
+  let(:untyped_link_doc)                { find_by_title(site.collections["docs_web"].docs, "Untyped Link") }
+  let(:blank_a)                         { find_by_title(site.collections["docs_web"].docs, "Base Case A") }
+  let(:missing_doc)                     { find_by_title(site.collections["docs_web"].docs, "Untyped Link Missing Doc") }
 
-  let(:graph_data)                      { static_graph_file_content("net-web") }
-  let(:graph_generated_fpath)           { find_generated_file("/assets/graph-net-web.json") }
-  let(:graph_node)                      { get_graph_node("net-web") }
-  let(:graph_link)                      { get_graph_link_match_source("net-web") }
-  # deprecated: 'net-web' -> 'web'
-  let(:missing_link_graph_node)         { get_missing_link_graph_node(legacy=true) }
-  let(:missing_target_graph_link)       { get_missing_target_graph_link(legacy=true) }
+  let(:graph_data)                      { static_graph_file_content("web") }
+  let(:graph_generated_fpath)           { find_generated_file("/assets/graph-web.json") }
+  let(:graph_node)                      { get_graph_node("web") }
+  let(:graph_link)                      { get_graph_link_match_source("web") }
+  let(:missing_link_graph_node)         { get_missing_link_graph_node() }
+  let(:missing_target_graph_link)       { get_missing_target_graph_link() }
 
   # makes markdown tests work
   subject { described_class.new(site.config) }
@@ -52,7 +49,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
     FileUtils.rm_rf(Dir["#{site_dir()}"])
   end
 
-  context "GRAPH TYPE: NET-WEB" do
+  context "GRAPH TYPE: WEB" do
 
     context "dependencies" do
 
@@ -71,7 +68,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
     context "when target [[wikilink]] doc exists" do
 
       it "generates graph data" do
-        expect(graph_generated_fpath).to eq(File.join(site_dir, "/assets/graph-net-web.json"))
+        expect(graph_generated_fpath).to eq(File.join(site_dir, "/assets/graph-web.json"))
         expect(graph_data.class).to be(Hash)
       end
 
@@ -103,14 +100,14 @@ RSpec.describe(Jekyll::Graph::Generator) do
         it "'neighbors' 'node' is an id" do
           expect(graph_node["neighbors"]["nodes"]).to be_a(Array)
           expect(graph_node["neighbors"]["nodes"]).to eq([
-            "/docs_net_web/blank.a/",
+            "/docs_web/blank.a/",
           ])
         end
 
         it "'neighbors' 'link' is an object with 'source' and 'target', which are node ids" do
           expect(graph_node["neighbors"]["links"]).to be_a(Array)
           expect(graph_node["neighbors"]["links"]).to eq([
-            {"source"=>"/docs_net_web/link/", "target"=>"/docs_net_web/blank.a/"},
+            {"source"=>"/docs_web/link/", "target"=>"/docs_web/blank.a/"},
           ])
         end
 
@@ -124,7 +121,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
 
         it "'source' and 'target' attributes equal some nodes' id" do
           expect(graph_link["source"]).to eq(graph_node["id"])
-          expect(graph_link["target"]).to eq("/docs_net_web/blank.a/")
+          expect(graph_link["target"]).to eq("/docs_web/blank.a/")
         end
 
       end
@@ -134,7 +131,7 @@ RSpec.describe(Jekyll::Graph::Generator) do
     context "when target [[wikilink]] doc does not exist" do
 
       it "generates graph data" do
-        expect(graph_generated_fpath).to eq(File.join(site_dir, "/assets/graph-net-web.json"))
+        expect(graph_generated_fpath).to eq(File.join(site_dir, "/assets/graph-web.json"))
         expect(graph_data.class).to be(Hash)
       end
 

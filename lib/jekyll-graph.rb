@@ -32,8 +32,13 @@ module Jekyll
       def generate(site)
         # check what's enabled
         return if $graph_conf.disabled?
+        # deprecated: 'net_web' -> 'web'
         if !$graph_conf.disabled_net_web? && !site.respond_to?(:link_index)
-          Jekyll.logger.error("Jekyll-Graph: To generate the net-web graph, please either add and enable the 'jekyll-wikilinks' plugin or disable the net-web in the jekyll-graph config")
+          Jekyll.logger.error("Jekyll-Graph: To generate the net-web graph, please either add and enable the 'jekyll-wikirefs' or 'jekyll-wikilinks' plugin or disable the net-web in the jekyll-graph config")
+          return
+        end
+        if !$graph_conf.disabled_web? && !site.respond_to?(:link_index)
+          Jekyll.logger.error("Jekyll-Graph: To generate the web graph, please either add and enable the 'jekyll-wikirefs' or 'jekyll-wikilinks' plugin or disable the web in the jekyll-graph config")
           return
         end
         if !$graph_conf.disabled_tree? && !site.respond_to?(:tree)
@@ -65,6 +70,17 @@ module Jekyll
           )
           # create json file
           json_net_web_graph_file = self.new_page($graph_conf.path_assets, "graph-net-web.json", net_web_graph_content)
+        end
+        if !$graph_conf.disabled_web?
+          # generate json data
+          json_web_nodes, json_web_links = self.generate_json_net_web()
+          self.set_neighbors(json_web_nodes, json_web_links)
+          web_graph_content = JSON.dump(
+            nodes: json_web_nodes,
+            links: json_web_links,
+          )
+          # create json file
+          json_web_graph_file = self.new_page($graph_conf.path_assets, "graph-web.json", web_graph_content)
         end
         if !$graph_conf.disabled_tree?
           # generate json data
@@ -161,8 +177,13 @@ module Jekyll
 
       # json generation helpers
 
+      # deprecated: 'net_web' -> 'web'
       def generate_json_net_web()
-        net_web_nodes, net_web_links = [], []
+        return generate_json_web()
+      end
+
+      def generate_json_web()
+        web_nodes, web_links = [], []
 
         @md_docs.each do |doc|
           if !$graph_conf.excluded?(doc.type)
@@ -172,9 +193,9 @@ module Jekyll
             # missing nodes
             #
             @site.link_index.index[doc.url].missing.each do |missing_link_name|
-              if net_web_nodes.none? { |node| node[:id] == missing_link_name }
+              if web_nodes.none? { |node| node[:id] == missing_link_name }
                 Jekyll.logger.warn("Jekyll-Graph: Net-Web node missing: #{missing_link_name}, in: #{File.basename(doc.basename, File.extname(doc.basename))}")
-                net_web_nodes << {
+                web_nodes << {
                   id: missing_link_name, # an id is necessary for link targets
                   url: '',
                   label: missing_link_name,
@@ -183,7 +204,7 @@ module Jekyll
                     links: [],
                   },
                 }
-                net_web_links << {
+                web_links << {
                   source: doc.url,
                   target: missing_link_name,
                 }
@@ -192,7 +213,7 @@ module Jekyll
             #
             # existing nodes
             #
-            net_web_nodes << {
+            web_nodes << {
               # TODO: when using real ids, be sure to convert id to string (to_s)
               id: doc.url,
               url: relative_url(doc.url),
@@ -212,7 +233,7 @@ module Jekyll
                   linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
                   if !linked_doc.nil? && linked_doc.size == 1 && !$graph_conf.excluded?(linked_doc.first.type)
                     # TODO: add link['type'] to d3 graph
-                    net_web_links << {
+                    web_links << {
                       source: doc.url,
                       target: linked_doc.first.url,
                     }
@@ -228,7 +249,7 @@ module Jekyll
                 linked_doc = @md_docs.select{ |d| d.url == link_no_baseurl }
                 if !linked_doc.nil? && linked_doc.size == 1 && !$graph_conf.excluded?(linked_doc.first.type)
                   # TODO: add link['type'] to d3 graph
-                  net_web_links << {
+                  web_links << {
                     source: doc.url,
                     target: linked_doc.first.url,
                   }
@@ -239,7 +260,7 @@ module Jekyll
           end
         end
 
-        return net_web_nodes, net_web_links
+        return web_nodes, web_links
       end
 
       # used for both plugins:

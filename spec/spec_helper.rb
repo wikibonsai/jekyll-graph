@@ -49,10 +49,13 @@ RSpec.configure do |config|
   ## graph retrieval helpers
 
   def static_graph_file_content(type)
-    if type == "net-web"
-      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
-    elsif type == "tree"
+    if type == "tree"
       graph_file = File.read(site_dir("/assets/graph-tree.json"))
+    elsif type == "web"
+      graph_file = File.read(site_dir("/assets/graph-web.json"))
+    # deprecated: 'net_web' -> 'web'
+    elsif type == "net-web"
+      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
     else
       Jekyll.logger.error("Invalid graph type #{type}")
     end
@@ -62,28 +65,23 @@ RSpec.configure do |config|
   # TODO: write better graph data getters
 
   def get_graph_node(type)
-    if type == "net-web"
-      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
-      JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/docs_net_web/link/" }
-    elsif type == "tree"
+    if type == "tree"
       graph_file = File.read(site_dir("/assets/graph-tree.json"))
       JSON.parse(graph_file)["nodes"].find { |n| n["namespace"] == "root.second-level" }
+    elsif type == "web"
+      graph_file = File.read(site_dir("/assets/graph-web.json"))
+      JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/docs_web/link/" }
+    # deprecated: 'net_web' -> 'web'
+    elsif type == "net-web"
+      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+      JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "/docs_net_web/link/" }
     else
       Jekyll.logger.error("Invalid graph type #{type}")
     end
   end
 
   def get_graph_link_match_source(type)
-    if type == "net-web"
-      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
-      all_links = JSON.parse(graph_file)["links"]
-      target_link = all_links.find_all { |l| l["source"] == "/docs_net_web/link/" && l["target"] == "/docs_net_web/blank.a/" } # link "Untyped Link" -> "Blank A"
-      if target_link.size > 1
-        raise "Expected only one link with 'source' as \"Base Case A\" note to exist."
-      else
-        return target_link[0]
-      end
-    elsif type == "tree"
+    if type == "tree"
       graph_file = File.read(site_dir("/assets/graph-tree.json"))
       all_links = JSON.parse(graph_file)["links"]
       target_link = all_links.find_all { |l| l["source"] == "/docs_tree/root/" && l["target"] == "/docs_tree/second-level/" } # link "Root" -> "Second Level"
@@ -92,22 +90,51 @@ RSpec.configure do |config|
       else
         return target_link[0]
       end
+    elsif type == "web"
+      graph_file = File.read(site_dir("/assets/graph-web.json"))
+      all_links = JSON.parse(graph_file)["links"]
+      target_link = all_links.find_all { |l| l["source"] == "/docs_web/link/" && l["target"] == "/docs_web/blank.a/" } # link "Untyped Link" -> "Blank A"
+      if target_link.size > 1
+        raise "Expected only one link with 'source' as \"Base Case A\" note to exist."
+      else
+        return target_link[0]
+      end
+    # deprecated: 'net_web' -> 'web'
+    elsif type == "net-web"
+      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+      all_links = JSON.parse(graph_file)["links"]
+      target_link = all_links.find_all { |l| l["source"] == "/docs_net_web/link/" && l["target"] == "/docs_net_web/blank.a/" } # link "Untyped Link" -> "Blank A"
+      if target_link.size > 1
+        raise "Expected only one link with 'source' as \"Base Case A\" note to exist."
+      else
+        return target_link[0]
+      end
     else
       Jekyll.logger.error("Invalid graph type #{type}")
     end
   end
 
-  # net-web
+  # net-web / web
 
-  def get_missing_link_graph_node()
-    graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+  def get_missing_link_graph_node(legacy = false)
+    if legacy
+      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+    else
+      graph_file = File.read(site_dir("/assets/graph-web.json"))
+    end
     JSON.parse(graph_file)["nodes"].find { |n| n["id"] == "missing.doc" } # "Missing Doc"
   end
 
-  def get_missing_target_graph_link()
-    graph_file = File.read(site_dir("/assets/graph-net-web.json"))
-    all_links = JSON.parse(graph_file)["links"]
-    target_link = all_links.find_all { |l| l["source"] == "/docs_net_web/link.missing-doc/" } # "Missing Doc" link as source
+  def get_missing_target_graph_link(legacy = false)
+    if legacy
+      graph_file = File.read(site_dir("/assets/graph-net-web.json"))
+      all_links = JSON.parse(graph_file)["links"]
+      target_link = all_links.find_all { |l| l["source"] == "/docs_net_web/link.missing-doc/" } # "Missing Doc" link as source
+    else
+      graph_file = File.read(site_dir("/assets/graph-web.json"))
+      all_links = JSON.parse(graph_file)["links"]
+      target_link = all_links.find_all { |l| l["source"] == "/docs_web/link.missing-doc/" } # "Missing Doc" link as source
+    end
     if target_link.size > 1
       raise "Expected only one link with 'source' as \"Missing Doc\" note to exist."
     else

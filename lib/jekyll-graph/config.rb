@@ -6,17 +6,17 @@ module Jekyll
 
     class PluginConfig
 
-      ASSETS_KEY = "assets"
-      ATTRS_KEY = "attrs"
-      CONFIG_KEY = "graph"
+      ASSETS_KEY  = "assets"
+      ATTRS_KEY   = "attrs"
+      CONFIG_KEY  = "graph"
       ENABLED_KEY = "enabled"
       EXCLUDE_KEY = "exclude"
-      LINKS_KEY = "links"
-      NET_WEB_KEY = "net_web"
-      PATH_KEY = "path"
+      LINKS_KEY   = "links"
+      NET_WEB_KEY = "net_web" # deprecated: 'net_web' -> 'web'
+      PATH_KEY    = "path"
       SCRIPTS_KEY = "scripts"
-      TREE_KEY = "tree"
-      TYPE_KEY = "type"
+      TREE_KEY    = "tree"
+      WEB_KEY     = "web"
 
       def initialize(config)
         @config ||= config
@@ -30,12 +30,17 @@ module Jekyll
         return option(ENABLED_KEY) == false
       end
 
-      def disabled_net_web?
-        return option_net_web(ENABLED_KEY) == false
-      end
-
       def disabled_tree?
         return option_tree(ENABLED_KEY) == false
+      end
+
+      # deprecated: 'net_web' -> 'web'
+      def disabled_net_web?
+        return option_web(ENABLED_KEY) == false
+      end
+
+      def disabled_web?
+        option_web(ENABLED_KEY) == false
       end
 
       def excluded?(type)
@@ -52,13 +57,13 @@ module Jekyll
       end
 
       def use_attrs?
-        return true if option_net_web_exclude(ATTRS_KEY).nil?
-        return !option_net_web_exclude(ATTRS_KEY)
+        return true if option_web_exclude(ATTRS_KEY).nil?
+        return !option_web_exclude(ATTRS_KEY)
       end
 
       def use_links?
-        return true if option_net_web_exclude(LINKS_KEY).nil?
-        return !option_net_web_exclude(LINKS_KEY)
+        return true if option_web_exclude(LINKS_KEY).nil?
+        return !option_web_exclude(LINKS_KEY)
       end
 
       # options
@@ -71,12 +76,28 @@ module Jekyll
         @config[CONFIG_KEY] && @config[CONFIG_KEY][PATH_KEY] && @config[CONFIG_KEY][PATH_KEY][key]
       end
 
-      def option_net_web(key)
-        @config[CONFIG_KEY] && @config[CONFIG_KEY][NET_WEB_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][key]
+      def option_web(key)
+        if @config[CONFIG_KEY]
+          # deprecated: 'net_web' -> 'web'
+          if @config[CONFIG_KEY][NET_WEB_KEY]
+            return @config[CONFIG_KEY][NET_WEB_KEY][key]
+          end
+          if @config[CONFIG_KEY][WEB_KEY]
+            return @config[CONFIG_KEY][WEB_KEY][key]
+          end
+        end
       end
 
-      def option_net_web_exclude(key)
-        @config[CONFIG_KEY] && @config[CONFIG_KEY][NET_WEB_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][EXCLUDE_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][EXCLUDE_KEY][key]
+      def option_web_exclude(key)
+        if @config[CONFIG_KEY]
+          # deprecated: 'net_web' -> 'web'
+          if @config[CONFIG_KEY][NET_WEB_KEY] && @config[CONFIG_KEY][NET_WEB_KEY][EXCLUDE_KEY]
+            return @config[CONFIG_KEY][NET_WEB_KEY][EXCLUDE_KEY][key]
+          end
+          if @config[CONFIG_KEY][WEB_KEY]&& @config[CONFIG_KEY][WEB_KEY][EXCLUDE_KEY]
+            return @config[CONFIG_KEY][WEB_KEY][EXCLUDE_KEY][key]
+          end
+        end
       end
 
       def option_tree(key)
